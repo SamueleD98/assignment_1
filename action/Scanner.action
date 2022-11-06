@@ -1,0 +1,9 @@
+#goal
+#string goal
+---
+#result
+string ontology_path
+string ontology_iri
+---
+#feedback
+int8 percentage

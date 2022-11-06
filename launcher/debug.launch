@@ -1,0 +1,84 @@
+<launch>
+
+    <!-- <param name="publish_frequency" type="double" value="10.0" /> -->
+
+    <param name="O_path" type="str" value="/home/samuele/experimental_lab__ws/src/assignment_1/ontology/map1.owl" />
+    <param name="O_IRI" type="str" value="http://bnc/exp-rob-lab/2022-23" />
+
+    <param name="armor_client_id" type="str" value="user" />
+    <param name="armor_reference_name" type="str" value="ref" />
+
+    <param name="ontology_reasoner" type="str" value="PELLET" />
+
+    <param name="charging_station_in" type="str" value="E" />
+
+    <param name="scanning_time" type="int" value="0" />
+    <param name="planning_time" type="int" value="1" />
+    <param name="monitoring_time" type="int" value="1" />
+    <param name="recharging_time" type="int" value="1" />
+
+    <rosparam param="battery_time"> [80, 100] </rosparam>
+
+    <!--<param name="save_ontology_after_exe" type="bool" value="false" />
+     rosrun armor execute it.emarolab.armor.ARMORMainService -->
+    <node pkg="armor"
+          type="execute"
+          name="armor_service"
+          args="it.emarolab.armor.ARMORMainService"
+          output="screen"
+          />
+
+    <node pkg = "assignment_1"
+          type = "ontology_interface.py"
+          name = "ontology_interface"
+          output="screen"
+          launch-prefix="gnome-terminal --command"
+
+          />
+
+    <node pkg = "assignment_1"
+          type = "scanner.py"
+          name = "scanner"
+          output="screen"
+          launch-prefix="gnome-terminal --command"
+
+           />
+
+    <node pkg = "assignment_1"
+          type = "planner.py"
+          name = "planner"
+          output="screen"
+          launch-prefix="gnome-terminal --command"
+           />
+
+   <node pkg = "assignment_1"
+         type = "controller.py"
+         name = "controller"
+         output="screen"
+         launch-prefix="gnome-terminal --command"
+
+          />
+
+    <node pkg = "assignment_1"
+          type = "state_machine.py"
+          name = "state_machine"
+          output="screen"
+          launch-prefix="gnome-terminal --command"
+          />
+
+
+    <node pkg = "assignment_1"
+          type = "robot_state.py"
+          name = "robot_state"
+          output="screen"
+          launch-prefix="gnome-terminal --command"
+          />
+
+    <node pkg = "smach_viewer"
+          type = "smach_viewer.py"
+          name = "smach_viewer"
+          output = "screen"
+    />
+
+
+</launch>

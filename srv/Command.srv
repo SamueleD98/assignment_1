@@ -1,0 +1,6 @@
+bool update_timestamp   #before the operation
+string command          #load_map, query, move
+string first_arg       #if any
+string second_arg        #if any
+---
+string[] res

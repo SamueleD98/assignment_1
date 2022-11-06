@@ -1,0 +1,4 @@
+string command #timestamp, query, move
+string[] properties # if any
+---
+string[] res 

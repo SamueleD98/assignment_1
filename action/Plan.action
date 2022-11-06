@@ -1,0 +1,17 @@
+###### The motion planning interface
+
+### Action Server Goal
+
+# Type of plan the planner has to compute
+string command
+
+---
+
+### Action Server Result
+
+# Next target the robot has to reach
+string next_target
+
+---
+
+### Action Server Feedback

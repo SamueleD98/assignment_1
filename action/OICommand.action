@@ -1,0 +1,15 @@
+### Action Server Goal
+
+string command
+string location       #if the command is move_to, else ''
+
+---
+
+### Action Server Result
+
+string res
+string[] list
+
+---
+
+### Action Server Feedback
