@@ -9,18 +9,21 @@
     <param name="armor_reference_name" type="str" value="ref" />
 
     <param name="ontology_reasoner" type="str" value="PELLET" />
+    <param name="urgency_threshold" type="int" value="10" />
 
     <param name="charging_station_in" type="str" value="E" />
 
     <param name="scanning_time" type="int" value="0" />
-    <param name="planning_time" type="int" value="1" />
-    <param name="monitoring_time" type="int" value="1" />
-    <param name="recharging_time" type="int" value="1" />
+    <rosparam param="planning_time"> [0, 0.1] </rosparam>
+    <rosparam param="motion_time"> [0.2, 1] </rosparam>
 
-    <rosparam param="battery_time"> [80, 100] </rosparam>
 
-    <!--<param name="save_ontology_after_exe" type="bool" value="false" />
-     rosrun armor execute it.emarolab.armor.ARMORMainService -->
+    <param name="monitoring_time" type="int" value="10" />
+    <param name="recharging_time" type="int" value="10" />
+
+    <rosparam param="battery_time"> [1, 2] </rosparam>
+
+    <!-- rosrun armor execute it.emarolab.armor.ARMORMainService -->
     <node pkg="armor"
           type="execute"
           name="armor_service"
@@ -39,9 +42,6 @@
     <node pkg = "assignment_1"
           type = "scanner.py"
           name = "scanner"
-          output="screen"
-          launch-prefix="gnome-terminal --command"
-
            />
 
     <node pkg = "assignment_1"
@@ -70,8 +70,6 @@
     <node pkg = "assignment_1"
           type = "robot_state.py"
           name = "robot_state"
-          output="screen"
-          launch-prefix="gnome-terminal --command"
           />
 
     <node pkg = "smach_viewer"
