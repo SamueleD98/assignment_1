@@ -9,29 +9,32 @@ Author: *Samuele Depalo*
 
 This repository contains ROS-based software for controlling a robot. The main component is a state-machine that represent the robot behaviour according to the environment and to some stimulus.
 
-[Original](https://github.com/CarmineD8/python_simulator) one developed by [Student Robotics](https://studentrobotics.org/) 
-
 ### Scenario
 
 The considered mobile robot retrieves environment related information from an ontology and uses this data for moving across locations. 
 Here how the robot should behave:
 1. The robot should move between corridors
 2. If a room is not visited for a given time, the robot should visit it
-3. If the robot's battery is low on energy, the robot should stop the current action and go in a specific room for recharging.
+3. If the robot's battery is low on energy, the robot should stop the current action and go in a specific room for recharging.  
 
+### Package List
 
-
-## Software architecture 
-
-The repository structure is:
+The repository contains the following resources:
 - action --> actions' structure
 - launcher --> ROS launchers
 - msg --> messages' structure 
 - ontology --> .owl files
 - scripts --> python scripts for the ROS nodes
 - srv --> services' structure
+- images --> images shown in this ReadMe
 
 There are also files related to the ROS architecture (*CMakeLists.txt* and *package.xml*) and to the code documentation (*Makefile*, *conf.py* and *index.rst*).
+
+
+
+## Software architecture 
+
+
 
 ### The finite state machine
 Here a representation of the implemented state machine:
@@ -65,14 +68,19 @@ Here how the state machine evolves in time:
 Normally the robot should keep moving from location to location.  
 When a *battery low* signal is received, the **Monitoring** state is preempted and the execution goes to the **Recharging** state. From there, either the robot goes in the recharging room a wait for itself to be fully recharged or, could happen, a new signal comes (*battery high*) before it could even reach the room. In that case it's the **Rechargin** state to be preempted for the Monitoring one: there's no point in going to recharge it the robot has still power. Why the battery should result full after a *battery low* signal comes is not part of the discusion (could be a battery level misreading,  poor/defective hardware,.. ).
 
-
-
-
 list of messafes and parameters
 
 ## Installing and running
+In order to install and run this application, first you should install the *aRMOR* and the *SMACH* package (you can follow the procedure described [here](https://unigeit.sharepoint.com/sites/106723-ExperimentalRoboticsLaboratory/Class%20Materials/Forms/AllItems.aspx?id=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials%2FROS%2Dinstallation%2Emd&parent=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials)). Mind that the software also exploits [roslaunch](http://wiki.ros.org/roslaunch), [rospy](http://wiki.ros.org/rospy) and [actionlib](http://wiki.ros.org/actionlib/DetailedDescription).
+
+For running the software call the launcher with `roslaunch assignment_1 system.launch`. This will set the parameters in the server, run the aRMOR server, the state machine and all the other necessary components later described.  
+
+The parameters you can tune for testing the software are later described.
 
 ## Code description
+
+
+
 with screenshot/gifs
 
 ## Working hypothesis and environment
