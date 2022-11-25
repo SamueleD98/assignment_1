@@ -9,6 +9,7 @@ Author: *Samuele Depalo*
 
 This repository contains ROS-based software for controlling a robot. The main component is a state-machine that represent the robot behaviour according to the environment and to some stimulus.
 
+[Original](https://github.com/CarmineD8/python_simulator) one developed by [Student Robotics](https://studentrobotics.org/) 
 
 ### Scenario
 
@@ -59,15 +60,15 @@ With this concurrent structure, the transitions among states are guaranteed to b
 Choosing of separating the motion of the robot from the main task of the two states (Monitoring and Recharge) increases the modularity: in fact, doing so, allow to change one of the two tasks by just modyfing the inner state and leaving as it is the other. Even more, by adding another inner state you can easily increase the tasks of the robot.
 
 **Temporal diagram**  
+Here how the state machine evolves in time:  
+![temporal_diagram](images/temporal_diagram.png)  
+Normally the robot should keep moving from location to location.  
+When a *battery low* signal is received, the **Monitoring** state is preempted and the execution goes to the **Recharging** state. From there, either the robot goes in the recharging room a wait for itself to be fully recharged or, could happen, a new signal comes (*battery high*) before it could even reach the room. In that case it's the **Rechargin** state to be preempted for the Monitoring one: there's no point in going to recharge it the robot has still power. Why the battery should result full after a *battery low* signal comes is not part of the discusion (could be a battery level misreading,  poor/defective hardware,.. ).
 
 
 
 
-
-[Original](https://github.com/CarmineD8/python_simulator) one developed by [Student Robotics](https://studentrobotics.org/) 
-temporal diagram
-states diagram
-each diagram, comment and list of messafes and parameters
+list of messafes and parameters
 
 ## Installing and running
 
