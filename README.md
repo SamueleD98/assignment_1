@@ -85,7 +85,14 @@ with screenshot/gifs
 
 ## Working hypothesis and environment
 ### System's features
+at which rate the system can stand the change in the battery status
+modularity
+parametrization
+even the recharging can be interrupted
 ### System's limitations
 ### Possible technical improvements
 
 ## Contact me
+Samuele Depalo  
+Personal mail: [depalo.samuele@gmail.com](depalo.samuele@gmail.com)  
+Istitutional mail: [s5153930@studenti.unige.it](s5153930@studenti.unige.it)
