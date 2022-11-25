@@ -35,15 +35,32 @@ There are also files related to the ROS architecture (*CMakeLists.txt* and *pack
 ### The finite state machine
 Here a representation of the implemented state machine:
 ![state_machine](images/state_diagram.png)  
-For semplicity the connection among states don't show the stimulus name but, instead, it's possible to distinguish by the color the normal flow of the machine (black arrows) from the stimulus due to a change in the battery status (red arrows). 
+In order to simplify the diagram, the connection among states don't show the stimulus name but, instead, it's possible to distinguish by the color the normal flow of the machine (black arrows) from the stimulus due to a change in the battery status (red arrows).  
 
-Follows a comment on the machine.
-For best practice the machine has the least number of (main) states for the desired behavior, 3:
+The desired behaviour can be easily implemented using three (main) states:
 1. A **Mapping** state: here the information about the environment (.owl file) is loaded to be avaiable at need.
 2. A **Monitoring** state: the robot is expected to move across rooms and observe, *monitor*, the environment (although in this work the monitoring task consist of busy waiting).
-3. A **Recharge** state: once the system is notified the battery is low, the robot should move to a specific location for recharging  
+3. A **Recharging** state: once the system is notified the battery is low, the robot should move to a specific location for recharging  
 
-Of course, the motion between locations is not instantaneous and so it should be considered a state. This state, though, should have a different behaviour depending on the situation (monitoring/recharging) and in order to reduce the complexity of the execution
+
+
+The particularity of this state machine is its concurrent, hierarchical structure. In fact, both the Monitoring and the Recharging state consist of three inner states:
+1. **Move** state: it retrieves the next target location for the robot and interacts with the planner, and then the controller, in order to reach that location.
+2. **Monitor**/**Recharge** state: in this implementation these states actually consist in busy waiting for a given time, simulating the actual task the robot should carry in that time (either exploring the environment or recharging itself).
+3. **Check Battery status** state: this is a *Monitor* state, a particular kind of states that *Smach* allows to use. It works in *concurrence* with the other state machine (consisting of the two previosuly described states) waiting for a message to be published in a specific topic: '/battery_status'. Once something is published a callback is called to decide if due to this change in the battery level, the current state machine should be preempted for the other main state.  
+
+**Why not having a main MOVE state?**  
+The motion between locations could be considered a single main state. This state, though, should have a different behaviour depending on the situation (monitoring/recharging) in both choosing the next location and in terms of being preempted when a stimulus arrives (if the robot is already going to the recharging room and a *battery low* signal arrives, the robot shouldn't stop the motion for that room a start it from the beginning). So, implementing two different **move** states reduce consistently the complexity of the execution and, more, increase the modularity (what if I want one of the monitor states to monitor a topic and the other state a different one?). The code is however simple: they are created from the same class ( *Move* ) but with a slightly different configuration (more of this later).  
+
+**Why concurrent?**  
+With this concurrent structure, the transitions among states are guaranteed to be executed as soon as a stimulus arrives, and this without using any mutex of the sort. 
+
+**Why hierarchical?**  
+Choosing of separating the motion of the robot from the main task of the two states (Monitoring and Recharge) increases the modularity: in fact, doing so, allow to change one of the two tasks by just modyfing the inner state and leaving as it is the other. Even more, by adding another inner state you can easily increase the tasks of the robot.
+
+**Temporal diagram**  
+
+
 
 
 
