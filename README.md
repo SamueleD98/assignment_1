@@ -74,10 +74,22 @@ list of messafes and parameters
 In order to install and run this application, first you should install the *aRMOR* and the *SMACH* package (you can follow the procedure described [here](https://unigeit.sharepoint.com/sites/106723-ExperimentalRoboticsLaboratory/Class%20Materials/Forms/AllItems.aspx?id=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials%2FROS%2Dinstallation%2Emd&parent=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials)). Mind that the software also exploits [roslaunch](http://wiki.ros.org/roslaunch), [rospy](http://wiki.ros.org/rospy) and [actionlib](http://wiki.ros.org/actionlib/DetailedDescription).
 
 For running the software call the launcher with `roslaunch assignment_1 system.launch`. This will set the parameters in the server, run the aRMOR server, the state machine and all the other necessary components later described.  
-
 The parameters you can tune for testing the software are later described.
 
 ## Code description
+
+### Software components
+
+It follows the details of each software component implemented in this repository, which is available in the scripts/ folder.
+
+*The State Machine node*
+
+
+*The Ontology Interface node*
+*The Robot State node*
+*The Scanner node*
+*The Planner node*
+*The Controller node*
 
 
 
