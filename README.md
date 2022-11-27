@@ -82,12 +82,26 @@ The parameters you can tune for testing the software are later described.
 
 It follows the details of each software component implemented in this repository, which is available in the scripts/ folder.
 
-*The State Machine node*
-It implements the behaviour the robot follows. Four different kind of states' implementation are described in as many classes: *Mapping()*, *Move()*, *Monitor()* and *Recharge()*.  
+**The State Machine node**
+It implements the behaviour the robot follows.  
+Four different kind of state's implementation are described in as many classes: *Mapping()*, *Move()*, *Monitor()* and *Recharge()*.   
+
+#### (Simple) Action Clients:
+- *OntologyInterface*:
+- *action_scanner*:
+- *action_planner*: 
+- *action_controller*:
 
 
+**The Ontology Interface node**  
+This node provides an interface for all the other components to the armor server, allowing them to query and manipulate an ontology in a easier and modular way. By doing so, the other components (e.g. planner, controller) have no commands related to the armor server connection.  
+The node presents a *SimpleActionServer* which possible goals are:
+- *load_map*: load the ontology specified in the rosparams server, save lists of names of the main locations and also the name of the robot, update the urgency threshold with the one given as parameter, call the reasoner and update the robot's *now* timestamp.
+- *next_room*: find the next location the robot should visit following a predetermined algorithm. It retrieves the urgent rooms as the elements that are both in the urgent locations list and in the rooms list, then takes one of those which are also reachables. If there are none, it choose a reachable corridor. If no corridors nor urgent rooms are avaiable, it takes randomly a reachable location.
+- *move_to*: once the robot reaches a new location, the node update both its position in the ontology and the *visitedAt* value for the new location.
+- *recharge_room*: return the location for the recharging of the robot.  
 
-*The Ontology Interface node*  
+
 
 *The Robot State node*   
 This node implements two services (set_pose and get_pose) and a publisher (battery_status).
