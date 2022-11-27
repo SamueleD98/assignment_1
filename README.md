@@ -83,13 +83,34 @@ The parameters you can tune for testing the software are later described.
 It follows the details of each software component implemented in this repository, which is available in the scripts/ folder.
 
 *The State Machine node*
+It implements the behaviour the robot follows. Four different kind of states' implementation are described in as many classes: *Mapping()*, *Move()*, *Monitor()* and *Recharge()*.  
 
 
-*The Ontology Interface node*
-*The Robot State node*
-*The Scanner node*
-*The Planner node*
-*The Controller node*
+
+*The Ontology Interface node*  
+
+*The Robot State node*   
+This node implements two services (set_pose and get_pose) and a publisher (battery_status).
+
+The services allow setting and getting the current robot position, which is shared between the planner and the controller. 
+
+The batter_status message is published when the batter changes state. We consider two possible states: low battery (True is published) and recharged (False is published).
+The battery_time parameter is used to delay the published messages.
+
+*The Scanner node*  
+This node simulates a scanner which should retrieve information about the environment (e.g. from a QR code). 
+For now it just send a goal to the Ontology Interface node for loading the ontology passed as parameter.  
+
+*The Planner node*  
+The planner node implements an action server named motion/planner. This is done by the means of the SimpleActionServer class based on the Plan action message. This action server requires the state/get_pose/ service of the robot-state node, and a target point given as goal.
+
+Given the current and target points, this component returns a plan as a list of via_points, which are randomly generated for simplicity. The number of via_points can be set with the test/random_plan_points parameter addressed below. Moreover, each via_point is provided after a delay to simulate computation, which can be tuned through the test/random_plan_time parameter. When a new via_points is generated, the updated plan is provided as feedback. When all the via_points have been generated, the plan is provided as results.
+
+*The Controller node*  
+The controller node implements an action server named motion/controller. This is done by the means of the SimpleActionServer class based on the Control action message. This action server requires the state/set_pose/ service of the robot-state node and a plan given as a list of via_points by the planner.
+
+Given the plan and the current robot position, this component iterates for each planned via_point and waits to simulate the time spent moving the robot to that location. The waiting time can be tuned through the test/random_motion_time parameter detailed below. Each time a via_point is reached the state/set_pose service is invoked, and a feedback is provided. When the last via_point is reached, the action service provides a result by propagating the current robot position, which has been already updated through the state/set_pose service.
+
 
 
 
