@@ -83,18 +83,19 @@ When a *battery low* signal is received, the **Monitoring** state is preempted a
 
 It follows the details of each software component implemented in this repository, which is available in the scripts/ folder.
 
-**The State Machine node**
+#### The State Machine node  
 It implements the behaviour the robot follows.  
 Four different kind of state's implementation are described in as many classes: *Mapping()*, *Move()*, *Monitor()* and *Recharge()*.   
 
-#### (Simple) Action Clients:
-- *OntologyInterface*:
-- *action_scanner*:
-- *action_planner*: 
-- *action_controller*:
+Actions:  
+- *OntologyInterface*, client
+- *action_scanner*, client
+- *action_planner*, client
+- *action_controller*, client
 
 
-**The Ontology Interface node**  
+#### The Ontology Interface node  
+
 This node provides an interface for all the other components to the armor server, allowing them to query and manipulate an ontology in a easier and modular way. By doing so, the other components (e.g. planner, controller) have no commands related to the armor server connection.  
 The node presents a *SimpleActionServer* which possible goals are:
 - *load_map*: load the ontology specified in the rosparams server, save lists of names of the main locations and also the name of the robot, update the urgency threshold with the one given as parameter, call the reasoner and update the robot's *now* timestamp.
@@ -106,24 +107,15 @@ The functions pretty much corresponds to the actions the server is able to carry
 - *update_timestamp*: like already mentioned it updates the *now* timestamp of the robot and calls the reasoner.
 - *clean_response_list*: the responses returned by the armor queries have to be processed before using them. Firstly the function retrieves a list from the response and then removes the *IRI* plus some special character from each element. When it's dealing with a timestamp, it removes also the string '^^xsd:long'.  
 
-Parameters:
-- ontology_path
-- ontology_iri 
-- recharge_room 
-- ontology_reasoner 
-- armor_client_id 
-- armor_reference_name 
-- urgencyThreshold 
-
-Service:
+Services:
 - /armor_interface_srv (waits for it to be ready)
 
-Action:
+Actions:
 - OICommandAction, server
 
 
 
-*The Robot State node*   
+#### The Robot State node  
 This node implements two services (set_pose and get_pose) and a publisher (battery_status).
 
 The services allow setting and getting the current robot position, which is shared between the planner and the controller. 
@@ -131,22 +123,44 @@ The services allow setting and getting the current robot position, which is shar
 The batter_status message is published when the batter changes state. We consider two possible states: low battery (True is published) and recharged (False is published).
 The battery_time parameter is used to delay the published messages.
 
-*The Scanner node*  
+Messages:
+- battery_status, publisher
+
+Services:
+- GetPose, server
+- SetPose, server
+
+#### The Scanner node
 This node simulates a scanner which should retrieve information about the environment (e.g. from a QR code). 
 For now it just send a goal to the Ontology Interface node for loading the ontology passed as parameter.  
 
-*The Planner node*  
+Actions:
+- ScannerAction, server
+- OICommandAction, client
+
+#### The Planner node
 The planner node implements an action server named motion/planner. This is done by the means of the SimpleActionServer class based on the Plan action message. This action server requires the state/get_pose/ service of the robot-state node, and a target point given as goal.
 
 Given the current and target points, this component returns a plan as a list of via_points, which are randomly generated for simplicity. The number of via_points can be set with the test/random_plan_points parameter addressed below. Moreover, each via_point is provided after a delay to simulate computation, which can be tuned through the test/random_plan_time parameter. When a new via_points is generated, the updated plan is provided as feedback. When all the via_points have been generated, the plan is provided as results.
 
-*The Controller node*  
+Actions:
+- PlanAction, server
+
+Services:
+- GetPose, client
+
+
+#### The Controller node  
 The controller node implements an action server named motion/controller. This is done by the means of the SimpleActionServer class based on the Control action message. This action server requires the state/set_pose/ service of the robot-state node and a plan given as a list of via_points by the planner.
 
 Given the plan and the current robot position, this component iterates for each planned via_point and waits to simulate the time spent moving the robot to that location. The waiting time can be tuned through the test/random_motion_time parameter detailed below. Each time a via_point is reached the state/set_pose service is invoked, and a feedback is provided. When the last via_point is reached, the action service provides a result by propagating the current robot position, which has been already updated through the state/set_pose service.
 
+Actions:
+- ControlAction, server
 
-
+Services:
+- GetPose, client
+- SetPose, client
 
 ## Launching the Software
 
