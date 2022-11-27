@@ -13,19 +13,30 @@ This repository contains ROS-based software for controlling a robot. The main co
 
 The considered mobile robot retrieves environment related information from an ontology and uses this data for moving across locations. 
 Here how the robot should behave:
-1. The robot should move between corridors
-2. If a room is not visited for a given time, the robot should visit it
-3. If the robot's battery is low on energy, the robot should stop the current action and go in a specific room for recharging.  
+1. The robot should load a map before any other action
+2. The robot should move between corridors
+3. If a room is not visited for a given time, the robot should visit it
+4. If the robot's battery is low on energy, the robot should stop the current action and go in a specific room for recharging.  
+
+### Assumptions
 
 ### Package List
 
 The repository contains the following resources:
 - action --> actions' structure
+  - OICommand.action: It defines the goal and results concerning the ontology interface
+  - Scanner.action: It defines the goal and result concerning the map scanning/loading
+  - Plan.action: It defines the goal and results concerning motion planning
+  - Control.action: It defines the goal and results concerning motion controlling
 - launcher --> ROS launchers
 - msg --> messages' structure 
+  - Point.msg: It is the message representing a 2D point
 - ontology --> .owl files
+  - map1.owl: ontology as described in the assignment
 - scripts --> python scripts for the ROS nodes
 - srv --> services' structure
+  - GetPose.srv: It defines the request and response to get the current robot position
+  - SetPose.srv: It defines the request and response to set the current robot position
 - images --> images shown in this ReadMe
 
 There are also files related to the ROS architecture (*CMakeLists.txt* and *package.xml*) and to the code documentation (*Makefile*, *conf.py* and *index.rst*).
@@ -67,16 +78,6 @@ Here how the state machine evolves in time:
 ![temporal_diagram](images/temporal_diagram.png)  
 Normally the robot should keep moving from location to location.  
 When a *battery low* signal is received, the **Monitoring** state is preempted and the execution goes to the **Recharging** state. From there, either the robot goes in the recharging room a wait for itself to be fully recharged or, could happen, a new signal comes (*battery high*) before it could even reach the room. In that case it's the **Rechargin** state to be preempted for the Monitoring one: there's no point in going to recharge it the robot has still power. Why the battery should result full after a *battery low* signal comes is not part of the discusion (could be a battery level misreading,  poor/defective hardware,.. ).
-
-list of messafes and parameters
-
-## Installing and running
-In order to install and run this application, first you should install the *aRMOR* and the *SMACH* package (you can follow the procedure described [here](https://unigeit.sharepoint.com/sites/106723-ExperimentalRoboticsLaboratory/Class%20Materials/Forms/AllItems.aspx?id=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials%2FROS%2Dinstallation%2Emd&parent=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials)). Mind that the software also exploits [roslaunch](http://wiki.ros.org/roslaunch), [rospy](http://wiki.ros.org/rospy) and [actionlib](http://wiki.ros.org/actionlib/DetailedDescription).
-
-For running the software call the launcher with `roslaunch assignment_1 system.launch`. This will set the parameters in the server, run the aRMOR server, the state machine and all the other necessary components later described.  
-The parameters you can tune for testing the software are later described.
-
-## Code description
 
 ### Software components
 
@@ -147,6 +148,45 @@ Given the plan and the current robot position, this component iterates for each 
 
 
 
+## Launching the Software
+
+### Dependencies
+
+In order to install and run this application, first you should install the *aRMOR* and the *SMACH* package (you can follow the procedure described [here](https://unigeit.sharepoint.com/sites/106723-ExperimentalRoboticsLaboratory/Class%20Materials/Forms/AllItems.aspx?id=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials%2FROS%2Dinstallation%2Emd&parent=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials)). Mind that the software also exploits [roslaunch](http://wiki.ros.org/roslaunch), [rospy](http://wiki.ros.org/rospy) and [actionlib](http://wiki.ros.org/actionlib/DetailedDescription).
+
+### Installation
+
+Follow these steps to install:
+- Clone this repository inside your ROS workspace (which should be sourced in your .bashrc)
+- Run chmod +x <file_name> for each file inside the scripts folder.
+- Run catkin_make from the root of your ROS workspace.
+
+### Launchers
+
+For running the software call the launcher with `roslaunch assignment_1 system.launch`.  
+This will set the parameters in the server, run the aRMOR server, the state machine and all the other necessary components later described.  
+
+### ROS Parameters  
+This software requires the following ROS parameters:
+- `O_path`: Path for the desired environment ontology
+- `O_IRI`: IRI for the desired environment ontology
+- `armor_client_id`, default "client"
+- `armor_reference_name`, default "ref"
+- `ontology_reasoner`, default "PELLET"
+- `urgency_threshold`, time after last visit which makes the location urgent, default 7
+- `charging_station_in`, recharging room, default "E"
+- `scanning_time`, time before loading the map, default 5
+- `planning_time`, time for planning a via point, default between 0.1 and 0.2
+- `motion_time`, time for reaching a via point, default between 0.1 and 0.2
+- `monitoring_time`, busy waiting duration, default 10
+- `recharging_time`, busy waiting duration, default 10
+- `battery_time`, battery status toggle time, default between 15 and 40
+
+
+## RUNNING CODE GIFS
+
+
+
 with screenshot/gifs
 
 ## Working hypothesis and environment
@@ -157,6 +197,7 @@ parametrization
 even the recharging can be interrupted
 ### System's limitations
 ### Possible technical improvements
+actions feedback
 
 ## Contact me
 Samuele Depalo  
