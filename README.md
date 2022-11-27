@@ -101,6 +101,25 @@ The node presents a *SimpleActionServer* which possible goals are:
 - *move_to*: once the robot reaches a new location, the node update both its position in the ontology and the *visitedAt* value for the new location.
 - *recharge_room*: return the location for the recharging of the robot.  
 
+The functions pretty much corresponds to the actions the server is able to carry out. There are two more functions which are often called during the computation:
+- *update_timestamp*: like already mentioned it updates the *now* timestamp of the robot and calls the reasoner.
+- *clean_response_list*: the responses returned by the armor queries have to be processed before using them. Firstly the function retrieves a list from the response and then removes the *IRI* plus some special character from each element. When it's dealing with a timestamp, it removes also the string '^^xsd:long'.  
+
+Parameters:
+- ontology_path
+- ontology_iri 
+- recharge_room 
+- ontology_reasoner 
+- armor_client_id 
+- armor_reference_name 
+- urgencyThreshold 
+
+Service:
+- /armor_interface_srv (waits for it to be ready)
+
+Action:
+- OICommandAction, server
+
 
 
 *The Robot State node*   
