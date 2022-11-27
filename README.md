@@ -85,7 +85,16 @@ It follows the details of each software component implemented in this repository
 
 #### The State Machine node  
 It implements the behaviour the robot follows.  
-Four different kind of state's implementation are described in as many classes: *Mapping()*, *Move()*, *Monitor()* and *Recharge()*.   
+Four different kind of state's implementation are described in as many classes: *Mapping()*, *Move()*, *Monitor()* and *Recharge()*.    
+The execute of a Mapping() state simply send a goal to the Scanner node for loading the map and waits for it to end.  
+Move(), depending on the "type" argument, either asks to the Ontology Interface node for the next room to visit or it asks for the recharging room. After, it send a goal first to the planner and then to the controller for planning and control the motion to the target. Finally, it asks the Ontology Interface to update the robot position in the ontology.  
+In Monitor() and Recharge() there's only a busy waiting, to simulate the time the robot should spend performing those actions.  
+The main code consist in setting the node, configuring the state machine as already described, starting the server for visualization, initializing the action clients, waiting for the actions servers and finally executing the state machine.  
+Important to mention three callbacks:
+- monitor_cb() is called when a new message is published in /battery_status and terminates its execution only if the new battery status is different from the old one. This in order to ignore consecutive messages with the same information (if the robot already knows the battery is low and it's going to recharge, it should not interrupt this action if a new *battery low* message arrives)
+- child_term_cb() is called when any of the concurrence states terminates and simply terminates all the other states. This because, having a monitor state (which terminate its execution when the battery status changes) in concurrence with the monitoring/recharging states, the desired behavior consist in preempting one of these states when the other terminates (i.e. the battery status goes to low --> the check_battery_status state terminates its execution --> preempt the monitoring states for recharging, or, viceversa, the battery status goes to high --> the check_battery_status state terminates its execution --> preempt the recharging states for monitoring).
+- out_cb_monitoring() is called when all the concurrent states are terminated and decides which outcome the concurrence state machine, in the monitoring state, should return. If the inner *EXECUTE* state machine has been preempted from the *Check Battery status* then the outcome is *battery_low*, else the outcome is *monitoring_done*.
+- out_cb_recharge() is similar to the precedent. In this case, though, it always returns *recharge_done* because either the robot terminate the recharging execution or the state is preempted because a *battery high* update is received.
 
 Actions:  
 - *OntologyInterface*, client
@@ -116,11 +125,11 @@ Actions:
 
 
 #### The Robot State node  
-This node implements two services (set_pose and get_pose) and a publisher (battery_status).
+Similar to the one implemented in [arch_skeleton](https://github.com/buoncubi/arch_skeleton), this node implements two services (set_pose and get_pose) and a publisher (battery_status).
 
 The services allow setting and getting the current robot position, which is shared between the planner and the controller. 
 
-The batter_status message is published when the batter changes state. We consider two possible states: low battery (True is published) and recharged (False is published).
+The battery_status message is published when the batter changes state. We consider two possible states: low battery (True is published) and recharged (False is published).
 The battery_time parameter is used to delay the published messages.
 
 Messages:
@@ -138,10 +147,8 @@ Actions:
 - ScannerAction, server
 - OICommandAction, client
 
-#### The Planner node
-The planner node implements an action server named motion/planner. This is done by the means of the SimpleActionServer class based on the Plan action message. This action server requires the state/get_pose/ service of the robot-state node, and a target point given as goal.
-
-Given the current and target points, this component returns a plan as a list of via_points, which are randomly generated for simplicity. The number of via_points can be set with the test/random_plan_points parameter addressed below. Moreover, each via_point is provided after a delay to simulate computation, which can be tuned through the test/random_plan_time parameter. When a new via_points is generated, the updated plan is provided as feedback. When all the via_points have been generated, the plan is provided as results.
+#### The Planner node  
+A simplification of the one implemented in [arch_skeleton](https://github.com/buoncubi/arch_skeleton), the behaviour remains pretty much the same, for semplicity the feedbacks were removed.
 
 Actions:
 - PlanAction, server
@@ -151,9 +158,7 @@ Services:
 
 
 #### The Controller node  
-The controller node implements an action server named motion/controller. This is done by the means of the SimpleActionServer class based on the Control action message. This action server requires the state/set_pose/ service of the robot-state node and a plan given as a list of via_points by the planner.
-
-Given the plan and the current robot position, this component iterates for each planned via_point and waits to simulate the time spent moving the robot to that location. The waiting time can be tuned through the test/random_motion_time parameter detailed below. Each time a via_point is reached the state/set_pose service is invoked, and a feedback is provided. When the last via_point is reached, the action service provides a result by propagating the current robot position, which has been already updated through the state/set_pose service.
+A simplification of the one implemented in [arch_skeleton](https://github.com/buoncubi/arch_skeleton), the behaviour remains pretty much the same, for semplicity the feedbacks were removed.
 
 Actions:
 - ControlAction, server
