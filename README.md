@@ -208,7 +208,14 @@ This software requires the following ROS parameters:
 - `battery_time`, battery status toggle time, default between 15 and 40
 
 
-## RUNNING CODE GIFS
+## Code execution  
+At runtime the following are some possible outputs.  
+Firstly, the robot loads the map:  
+![image](https://user-images.githubusercontent.com/28822110/204156798-38b06a4e-8d2a-4e2a-8e28-19611c80a677.png)
+
+The monitoring can start:  
+![image](https://user-images.githubusercontent.com/28822110/204156809-6672d8fe-6729-4412-bc3f-65e7c58b3025.png)
+The robot decides to go in
 
 
 
