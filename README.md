@@ -214,13 +214,19 @@ Firstly, the robot loads the map:
 ![image](https://user-images.githubusercontent.com/28822110/204156798-38b06a4e-8d2a-4e2a-8e28-19611c80a677.png)
 
 The monitoring can start:  
-![image](https://user-images.githubusercontent.com/28822110/204156809-6672d8fe-6729-4412-bc3f-65e7c58b3025.png)
-The robot decides to go in
+![image](https://user-images.githubusercontent.com/28822110/204156809-6672d8fe-6729-4412-bc3f-65e7c58b3025.png)  
+The robot decides to go in "R1". Upon reaching the location, the MOVE_TO_MONITOR inner state returns done and pass the execution to the MONITOR state, the one that simulate the monitoring of the environment. Once it ends, the inner state returns "done", making the whole MONITORING state machine return "monitoring_done" and so making the system re-run this last state in order to reach and monitor a new location.   
+
+![image](https://user-images.githubusercontent.com/28822110/204159220-467c6ac5-219e-45d1-bdd9-857183a502bb.png)  
+Now the robot goes in "C1" and, while moving, the battery run out of energy. The inner state MOVE_TO_MONITOR is preempted and so it is the MONITORIN state machine. The new state is RECHARGING.  
+
+![image](https://user-images.githubusercontent.com/28822110/204159334-a2751a3b-d6be-47ec-a5a5-6f742b08841d.png)  
+The robot goes in "E" and recharge itself. Once it's done, it returns the "recharge_done" stimulus which gives again the execution to the MONITORING state.  
+
+![image](https://user-images.githubusercontent.com/28822110/204159389-31b7e170-fcec-4f80-8d43-6daca0df225b.png)  
+Now, the robot, which has completed a full recharge, continues monitoring the locations. During the monitoring of "R4" it receives an update on the battery status: it is high. The robot already new that and so it ignore the stimulus and keeps monitoring.
 
 
-
-
-with screenshot/gifs
 
 ## Working hypothesis and environment
 ### System's features
@@ -232,6 +238,7 @@ even the recharging can be interrupted
 ### Possible technical improvements
 actions feedback
 planning for rooms not reachable in one step
+urgency, should not be random the choice
 
 
 ## Contact me
