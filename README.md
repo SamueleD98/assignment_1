@@ -29,6 +29,9 @@ The repository contains the following resources:
   - Plan.action: It defines the goal and results concerning motion planning
   - Control.action: It defines the goal and results concerning motion controlling
 - launcher --> ROS launchers
+  - armor.launch: just run the armor server
+  - system.launch: main launcher, use this
+  - debug.launch: as the main one but the parameters are set for testing the system limits
 - msg --> messages' structure 
   - Point.msg: It is the message representing a 2D point
 - ontology --> .owl files
@@ -184,6 +187,9 @@ Follow these steps to install:
 
 For running the software call the launcher with `roslaunch assignment_1 system.launch`.  
 This will set the parameters in the server, run the aRMOR server, the state machine and all the other necessary components later described.  
+The showed outputs are the state machine node's and the smach viewer's ones. Those are enough to show the robot behaviour
+
+For further information you can call the `roslaunch assignment_1 debug.launch` which shows to screen all the components' output.
 
 ### ROS Parameters  
 This software requires the following ROS parameters:
@@ -206,6 +212,7 @@ This software requires the following ROS parameters:
 
 
 
+
 with screenshot/gifs
 
 ## Working hypothesis and environment
@@ -217,6 +224,8 @@ even the recharging can be interrupted
 ### System's limitations
 ### Possible technical improvements
 actions feedback
+planning for rooms not reachable in one step
+
 
 ## Contact me
 Samuele Depalo  
