@@ -48,9 +48,8 @@ There are also files related to the ROS architecture (*CMakeLists.txt* and *pack
 
 ## Software architecture 
 
+### The state machine  
 
-
-### The finite state machine
 Here a representation of the implemented state machine:
 ![state_machine](images/state_diagram.png)  
 In order to simplify the diagram, the connection among states don't show the stimulus name but, instead, it's possible to distinguish by the color the normal flow of the machine (black arrows) from the stimulus due to a change in the battery status (red arrows).  
@@ -60,7 +59,7 @@ The desired behaviour can be easily implemented using three (main) states:
 2. A **Monitoring** state: the robot is expected to move across rooms and observe, *monitor*, the environment (although in this work the monitoring task consist of busy waiting).
 3. A **Recharging** state: once the system is notified the battery is low, the robot should move to a specific location for recharging  
 
-
+This state machine has the particularity of being hierarchical: both the Monitoring and the Recharging state consist of three inner states. Also, while the system can be in just one state in the outer state machine, this is not valid for the inner ones: those are concurrent state machines. 
 
 The particularity of this state machine is its concurrent, hierarchical structure. In fact, both the Monitoring and the Recharging state consist of three inner states:
 1. **Move** state: it retrieves the next target location for the robot and interacts with the planner, and then the controller, in order to reach that location.
@@ -71,7 +70,10 @@ The particularity of this state machine is its concurrent, hierarchical structur
 The motion between locations could be considered a single main state. This state, though, should have a different behaviour depending on the situation (monitoring/recharging) in both choosing the next location and in terms of being preempted when a stimulus arrives (if the robot is already going to the recharging room and a *battery low* signal arrives, the robot shouldn't stop the motion for that room a start it from the beginning). So, implementing two different **move** states reduce consistently the complexity of the execution and, more, increase the modularity (what if I want one of the monitor states to monitor a topic and the other state a different one?). The code is however simple: they are created from the same class ( *Move* ) but with a slightly different configuration (more of this later).  
 
 **Why concurrent?**  
-With this concurrent structure, the transitions among states are guaranteed to be executed as soon as a stimulus arrives, and this without using any mutex of the sort. 
+While the system can be in just one state in the outer state machine, this is not valid for the inner ones. In fact the *Check Battery status* is always active during the execution of the monitoring/recharging phase.  
+Alternatively, the syncronization among subsribers and action servers should require mutexes and a much complex software.  
+By exploiting the full potential of SMACH with this concurrent structure, the transitions among states are guaranteed to be executed as soon as a stimulus arrives. It is also modular: the same *Check Battery status* state can process any message published on the given topic and so distinguish different kind of stimulus. This Smach.Monitor states are not computationally expensive and so they don't delay the concurrent state's execution of much. 
+
 
 **Why hierarchical?**  
 Choosing of separating the motion of the robot from the main task of the two states (Monitoring and Recharge) increases the modularity: in fact, doing so, allow to change one of the two tasks by just modyfing the inner state and leaving as it is the other. Even more, by adding another inner state you can easily increase the tasks of the robot.
@@ -239,6 +241,7 @@ even the recharging can be interrupted
 actions feedback
 planning for rooms not reachable in one step
 urgency, should not be random the choice
+the monitor and the recharge phase should call an external node while the state machine just checks if the state is preempted
 
 
 ## Contact me
