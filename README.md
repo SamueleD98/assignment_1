@@ -19,6 +19,11 @@ Here how the robot should behave:
 4. If the robot's battery is low on energy, the robot should stop the current action and go in a specific room for recharging.  
 
 ### Assumptions
+- The map is passed to the system as ontology stored in a .owl file
+- The maps follow the same scheme as the one given for the assignment (i.e. same ontology, different ABox)
+- The robot starts its motion with enough energy to load the map (so a *battery low* stimulus is ignored in that state). Otherwise the robot wouldn't be able to reach the recharge room since if it didn't load the information about the environment before the stimulus.
+- When low on battery, the robot is able to reach the recharging room even if this is not adjacent to the current location.
+- May happens the battery result full after a *battery low* signal comes. Why this, it's not part of the discusion (could be a battery level misreading,  poor/defective hardware,.. ).
 
 ### Package List
 
@@ -36,7 +41,13 @@ The repository contains the following resources:
   - Point.msg: It is the message representing a 2D point
 - ontology --> .owl files
   - map1.owl: ontology as described in the assignment
-- scripts --> python scripts for the ROS nodes
+- scripts --> python scripts for the ROS nodes (described below)
+  - state_machine.py
+  - robot_state.py
+  - ontology_interface.py
+  - scanner.py
+  - planner.py
+  - controller.py
 - srv --> services' structure
   - GetPose.srv: It defines the request and response to get the current robot position
   - SetPose.srv: It defines the request and response to set the current robot position
@@ -82,7 +93,7 @@ Choosing of separating the motion of the robot from the main task of the two sta
 Here how the state machine evolves over time:  
 ![temporal_diagram](images/temporal_diagram.png)  
 Normally the robot should keep moving from location to location.  
-When a *battery low* signal is received, the **Monitoring** state is preempted and the execution goes to the **Recharging** state. From there, either the robot goes in the recharging room a wait for itself to be fully recharged or, could happen, a new signal comes (*battery high*) before it could even reach the room. In that case it's the **Recharging** state to be preempted for the Monitoring one: there's no point in going to recharge it the robot has still power. Why the battery should result full after a *battery low* signal comes is not part of the discusion (could be a battery level misreading,  poor/defective hardware,.. ).
+When a *battery low* signal is received, the **Monitoring** state is preempted and the execution goes to the **Recharging** state. From there, either the robot goes in the recharging room a wait for itself to be fully recharged or, could happen, a new signal comes (*battery high*) before it could even reach the room. In that case it's the **Recharging** state to be preempted for the Monitoring one: there's no point in going to recharge it the robot has still power. 
 
 ### Software components
 
