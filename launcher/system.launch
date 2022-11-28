@@ -9,17 +9,17 @@
     <param name="armor_reference_name" type="str" value="ref" />
 
     <param name="ontology_reasoner" type="str" value="PELLET" />
-    <param name="urgency_threshold" type="int" value="10" />
+    <param name="urgency_threshold" type="int" value="30" />
 
     <param name="charging_station_in" type="str" value="E" />
 
-    <param name="scanning_time" type="int" value="2" />
+    <param name="scanning_time" type="int" value="1" />
     <rosparam param="planning_time"> [0.1, 0.2] </rosparam>
     <rosparam param="motion_time"> [0.1, 0.2] </rosparam>
 
 
-    <param name="monitoring_time" type="int" value="10" />
-    <param name="recharging_time" type="int" value="10" />
+    <param name="monitoring_time" type="int" value="2" />
+    <param name="recharging_time" type="int" value="5" />
 
     <rosparam param="battery_time"> [20, 30] </rosparam>
 
@@ -28,14 +28,11 @@
           type="execute"
           name="armor_service"
           args="it.emarolab.armor.ARMORMainService"
-          output="screen"
           />
 
     <node pkg = "assignment_1"
           type = "ontology_interface.py"
           name = "ontology_interface"
-          output="screen"
-          launch-prefix="gnome-terminal --command"
 
           />
 
@@ -47,16 +44,11 @@
     <node pkg = "assignment_1"
           type = "planner.py"
           name = "planner"
-          output="screen"
-          launch-prefix="gnome-terminal --command"
            />
 
    <node pkg = "assignment_1"
          type = "controller.py"
          name = "controller"
-         output="screen"
-         launch-prefix="gnome-terminal --command"
-
           />
 
     <node pkg = "assignment_1"

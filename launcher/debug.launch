@@ -14,14 +14,14 @@
     <param name="charging_station_in" type="str" value="E" />
 
     <param name="scanning_time" type="int" value="0" />
-    <rosparam param="planning_time"> [0, 0.1] </rosparam>
-    <rosparam param="motion_time"> [0.2, 1] </rosparam>
+    <rosparam param="planning_time"> [0, 0] </rosparam>
+    <rosparam param="motion_time"> [0, 0] </rosparam>
 
 
     <param name="monitoring_time" type="int" value="10" />
     <param name="recharging_time" type="int" value="10" />
 
-    <rosparam param="battery_time"> [1, 2] </rosparam>
+    <rosparam param="battery_time"> [5, 5] </rosparam>
 
     <!-- rosrun armor execute it.emarolab.armor.ARMORMainService -->
     <node pkg="armor"
@@ -36,7 +36,6 @@
           name = "ontology_interface"
           output="screen"
           launch-prefix="gnome-terminal --command"
-
           />
 
     <node pkg = "assignment_1"
