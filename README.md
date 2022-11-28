@@ -79,17 +79,17 @@ By exploiting the full potential of SMACH with this concurrent structure, the tr
 Choosing of separating the motion of the robot from the main task of the two states (Monitoring and Recharge) increases the modularity: in fact, doing so, allow to change one of the two tasks by just modyfing the inner state and leaving as it is the other. Even more, by adding another inner state you can easily increase the tasks of the robot.
 
 **Temporal diagram**  
-Here how the state machine evolves in time:  
+Here how the state machine evolves over time:  
 ![temporal_diagram](images/temporal_diagram.png)  
 Normally the robot should keep moving from location to location.  
-When a *battery low* signal is received, the **Monitoring** state is preempted and the execution goes to the **Recharging** state. From there, either the robot goes in the recharging room a wait for itself to be fully recharged or, could happen, a new signal comes (*battery high*) before it could even reach the room. In that case it's the **Rechargin** state to be preempted for the Monitoring one: there's no point in going to recharge it the robot has still power. Why the battery should result full after a *battery low* signal comes is not part of the discusion (could be a battery level misreading,  poor/defective hardware,.. ).
+When a *battery low* signal is received, the **Monitoring** state is preempted and the execution goes to the **Recharging** state. From there, either the robot goes in the recharging room a wait for itself to be fully recharged or, could happen, a new signal comes (*battery high*) before it could even reach the room. In that case it's the **Recharging** state to be preempted for the Monitoring one: there's no point in going to recharge it the robot has still power. Why the battery should result full after a *battery low* signal comes is not part of the discusion (could be a battery level misreading,  poor/defective hardware,.. ).
 
 ### Software components
 
 It follows the details of each software component implemented in this repository, which is available in the scripts/ folder.
 
 #### The State Machine node  
-It implements the behaviour the robot follows.  
+It implements the robot's behaviour.
 Four different kind of state's implementation are described in as many classes: *Mapping()*, *Move()*, *Monitor()* and *Recharge()*.    
 The execute of a Mapping() state simply send a goal to the Scanner node for loading the map and waits for it to end.  
 Move(), depending on the "type" argument, either asks to the Ontology Interface node for the next room to visit or it asks for the recharging room. After, it send a goal first to the planner and then to the controller for planning and control the motion to the target. Finally, it asks the Ontology Interface to update the robot position in the ontology.  
@@ -232,16 +232,20 @@ Now, the robot, which has completed a full recharge, continues monitoring the lo
 
 ## Working hypothesis and environment
 ### System's features
-at which rate the system can stand the change in the battery status
-modularity
-parametrization
-even the recharging can be interrupted
+- Independent from the ontology constitution: the system do not assume the names of the locations nor the robot one. After loading an ontology it just retrieves the necessary elements' names. This allow also to give the recharging room as parameter.
+- Highly parametrized: many aspect of the given scenario can be customized (giving any ABox for the used ontology, changing the execution times, recharging rooms,.. )
+- The scanner node is ready to implement the means for scanning the data (e.g. a qr code) representing the environment
+- The recharge state can be preempted if the battery is high
+- Modular: it's easy to change the robot behaviour in every aspect. From the motion task to the monitoring of the environment, from how it retrieves the maps to how it plans and controls the motion.
+- Able to withstand a high rate of stimulus
+
 ### System's limitations
+- The code highly depends on the scenario: it refers to robots, rooms and locations. Re-using this code for a similar application would require re-naming most of the system's elements.
 ### Possible technical improvements
-actions feedback
-planning for rooms not reachable in one step
-urgency, should not be random the choice
-the monitor and the recharge phase should call an external node while the state machine just checks if the state is preempted
+- For now, actions do not return any feedback during their execution. It can be useful to implement them.
+- A room is chosen randomnly from the urgent list. It would be better to chose the one not visited for the longest time. This would require to store that information for every room or, equivalently, to query the ontology, each time, for all the rooms' *visitedAt* value.
+- Once done the previous, it would be necessary to give the robot the ability of planning path for reaching also locations not adjacent (maybe by following the reachable locations to build a tree and then chosing the path that leads to the target with the least steps)
+- The monitor and the recharge phase should call an external node for their execution, meanwhile the state machine should just check if the state is preempted and act accordingly.
 
 
 ## Contact me
