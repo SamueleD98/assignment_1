@@ -1,5 +1,17 @@
 #!/usr/bin/env python
 
+"""
+.. module::robot_state
+    :platform: Unix
+    :synopsis: Python module for the state machine
+
+ROS node which keeps track of the robot pose and battery status.
+
+Being a simpler version, for the documentation please refer to `the original code <https://github.com/buoncubi/arch_skeleton>`_
+
+
+"""
+
 import rospy
 import random
 import threading
@@ -20,15 +32,10 @@ class RobotState:
         # Initialise battery level
         self._battery_low = False
 
-        print('robot_states')
+        print('robot_state')
 
         # Initialise randomness
-        try:
-            self._random_battery_time = rospy.get_param("/battery_time")
-        except:
-            print('WARNING: No params on server, using default ones')
-            self._random_battery_time = [15.0, 40.0]
-
+        self._random_battery_time = rospy.get_param("/battery_time", [15.0, 40.0])
 
         # Define services
         rospy.Service("/get_pose", GetPose, self.get_pose)
@@ -69,26 +76,3 @@ if __name__ == "__main__":
     # Instantiate the node manager class and wait
     RobotState()
     rospy.spin()
-
-#---------------------------
-
-# def battery_status():
-#     msg = String()
-#     msg.data = random.choice(['battery_low','battery_high'])
-#     return msg
-#
-# def robot_state():
-#     pub = rospy.Publisher('battery_status', String, queue_size=1)
-#     rospy.init_node('robot_state')
-#     #rate = rospy.Rate(10) # 10hz
-#     while not rospy.is_shutdown():
-#         pub.publish(battery_status())
-#         time.sleep(120000)
-#
-#
-#
-# if __name__ == '__main__':
-#     try:
-#         robot_state()
-#     except rospy.ROSInterruptException:
-#         pass

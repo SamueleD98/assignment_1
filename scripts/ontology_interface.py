@@ -1,5 +1,20 @@
 #! /usr/bin/env python
 
+"""
+.. module::ontology_interface
+    :platform: Unix
+    :synopsis: Python module for the ontology interface
+.. moduleauthor:: Samuele Depalo depalo.samuele@gmail.com
+
+ROS node for quering and manipulating the ontology loaded in the `ARMOR <hhttps://github.com/EmaroLab/armor>`_ server.
+
+Action server:
+
+- OntologyInterface
+
+
+"""
+
 import rospy
 import actionlib
 import random
@@ -9,7 +24,7 @@ import roslib
 import assignment_1
 import assignment_1.msg
 from assignment_1.srv import *
-from assignment_1.msg import OICommandResult
+from assignment_1.msg import OICommandAction, OICommandResult
 from armor_api.armor_client import ArmorClient
 
 class OntologyInterface(object):
@@ -18,52 +33,50 @@ class OntologyInterface(object):
     """
     def __init__(self):
         """
-        Initialise the object.
-        It initialises the action server,
-            gets the parameters from the rosparam server,
-            initialises the armor client,
-            waits for the armor service to be active,
-            run the action server.
+        Initialise the object
+
+        - it initialises the action server
+
+        - gets the parameters from the rosparam server
+
+        - initialises the armor client
+
+        - waits for the armor service to be active
+
+        - run the action server
+
         """
         self._as = SimpleActionServer('OntologyInterface',
-                                      assignment_1.msg.OICommandAction,
+                                      OICommandAction,
                                       execute_cb=self.execute_callback,
                                       auto_start=False)
-        self.map_loaded = False
-        try:
-            self.ontology_path = rospy.get_param("O_path")
-            self.ontology_iri = rospy.get_param("O_IRI")
-            self.recharge_room = rospy.get_param("charging_station_in")
-            self.ontology_reasoner = rospy.get_param("ontology_reasoner")
-            self.armor_client_id = rospy.get_param("armor_client_id")
-            self.armor_reference_name = rospy.get_param("armor_reference_name")
-            self.urgencyThreshold =  str(rospy.get_param("urgency_threshold"))
-        except:
-            print('WARNING: No params on server, using default ones')
-            self.ontology_path = "/home/samuele/experimental_lab__ws/src/assignment_1/ontology/map1.owl"
-            self.ontology_iri = "http://bnc/exp-rob-lab/2022-23"
-            self.recharge_room = "E"
-            self.ontology_reasoner = "PELLET"
-            self.armor_client_id = "client"
-            self.armor_reference_name = "ref"
-            self.urgencyThreshold = str(7)
+        #self.map_loaded = False
 
+        # params setup
+        self.ontology_path = rospy.get_param("O_path", "/home/samuele/experimental_lab__ws/src/assignment_1/ontology/map1.owl")
+        self.ontology_iri = rospy.get_param("O_IRI", "http://bnc/exp-rob-lab/2022-23")
+        self.recharge_room = rospy.get_param("charging_station_in", "E")
+        self.ontology_reasoner = rospy.get_param("ontology_reasoner", "PELLET")
+        self.armor_client_id = rospy.get_param("armor_client_id", "client")
+        self.armor_reference_name = rospy.get_param("armor_reference_name", "ref")
+        self.urgencyThreshold =  str(rospy.get_param("urgency_threshold", str(7)))
+
+        # define the armor client
         self.armor_client = ArmorClient(self.armor_client_id, self.armor_reference_name)
 
         rospy.wait_for_service('/armor_interface_srv', 30)
-
 
         self._as.start()
         print('OI ok')
 
     def execute_callback(self, goal):
         """
-        Action server callback.
-        It calls a function according to the received command and returns the function output.
+        Action server callback
+        It calls a function according to the received command and returns the function output
         """
         result = OICommandResult()
-        #print(goal)
-        if(goal.command == 'load_map'):
+
+        if(goal.command == 'load_map'):     # load a map
             result.res = self.load_map()
             self.map_loaded = True
             self._as.set_succeeded(result)
@@ -71,51 +84,28 @@ class OntologyInterface(object):
         #     #error
         #     self._as.set_aborted()
         #     return
-        elif(goal.command == 'next_room'):
-            self.update_timestamp()
+        elif(goal.command == 'next_room'):  # choose the next target
+            self.update_timestamp() # update the "now" value for obtaining the correct urgent locations
             result.res = self.choose_next_location()
             self._as.set_succeeded(result)
-        elif(goal.command == 'move_to'):
+        elif(goal.command == 'move_to'):    # set a new position for the robot
             target = goal.location
             result.res = self.set_location(target)
             self.update_timestamp()
             self._as.set_succeeded(result)
-        elif(goal.command == 'recharge_room'):
+        elif(goal.command == 'recharge_room'):  # return the recharge room
                 result.res = self.recharge_room
                 self._as.set_succeeded(result)
-        elif(goal.command == 'recharge'):
-                result.res = self.recharge()
-                self._as.set_succeeded(result)
-
-        # elif(goal.command == 'urgent'):
-        #     self.update_timestamp()
-        #     result.list = self.clean_response_list(self.armor_client.call('QUERY','IND','CLASS',['URGENT']))
-        #     self._as.set_succeeded(result)
-        # elif(goal.command == 'canReach'):
-        #     result.list = self.clean_response_list(self.armor_client.call('QUERY','OBJECTPROP','IND',['canReach',self.robot]))
-        #     self._as.set_succeeded(result)
-        # elif(goal.command == 'corridors'):
-        #     result.list = self.corridors
-        #     self._as.set_succeeded(result)
-        # elif(goal.command == 'rooms'):
-        #     result.list = self.rooms
-        #     self._as.set_succeeded(result)
-        # elif(goal.command == 'locations'):
-        #     result.list = self.locations
-        #     self._as.set_succeeded(result)
-
         else:
             #error
             self._as.set_aborted()
-
         return
 
 
 
     def load_map(self):
         """
-        Load the map as ontology and save the names of the robot and all the locations, rooms and corridors.
-        Then it updates the timestamp.
+        Load the map as ontology and save the names of the robot and all the locations, rooms and corridors
         """
 
         #LOAD THE ONTOLOGY
@@ -138,6 +128,17 @@ class OntologyInterface(object):
         return 'map_loaded'
 
     def choose_next_location(self):
+        """
+        Choose the next target following the following algorithm
+
+        - choose an urgent room (randomly) if reachable
+
+        - else, choose a corridor (randomly)
+
+        - else, choose any reachable room (randomly)
+        """
+
+
         #GET URGENT ROOMS FROM THE ONTOLOGY
         urgent_locations = self.clean_response_list(self.armor_client.call('QUERY','IND','CLASS',['URGENT']))
         urgent_rooms = [value for value in urgent_locations if value not in self.corridors]
@@ -168,8 +169,8 @@ class OntologyInterface(object):
 
     def set_location(self, to):
         """
-        Set a new robot location according to the input.
-        It replaces the robot's isIn value and the new location's visitedAt value with the new ones.
+        Set a new robot location according to the input
+        It replaces the robot's isIn value and the new location's visitedAt value with the new ones
         """
         old_uT = self.clean_response_list(self.armor_client.call('QUERY','DATAPROP','IND',['urgencyThreshold',self.robot]))[0]
 
@@ -199,6 +200,9 @@ class OntologyInterface(object):
         self.armor_client.call('REASON','','',[''])
 
     def clean_response_list(self, res):
+        """
+        Clean an armor query's output from the IRI and some special character
+        """
         #take the actual list
         list = res.queried_objects
         #remove the IRI

@@ -1,17 +1,23 @@
 #! /usr/bin/env python
 
 """
-.. module:: state_machine
-:platform: Unix
-:synopsis: Python module for the finite state machine
+.. module::state_machine
+    :platform: Unix
+    :synopsis: Python module for the state machine
 .. moduleauthor:: Samuele Depalo depalo.samuele@gmail.com
 
-ROS node for implementing a finite state machine
+ROS node for implementing a state machine which sets the desired robot's behaviour
 
 Action client(s):
-- Scanner
-- Planner
-- Controller
+
+- action_scanner
+
+- action_planner
+
+- action_controller
+
+- OntologyInterface
+
 
 """
 
@@ -22,61 +28,67 @@ from smach_ros import MonitorState, IntrospectionServer
 import time
 import random
 import actionlib
+from assignment_1.msg import OICommandGoal,ScannerAction, ScannerGoal, PlanAction, PlanGoal, ControlAction, ControlGoal, Point#, PlanResult ControlResult
 from assignment_1.srv import *
-import assignment_1.msg
-from assignment_1.msg import OICommandGoal, PlanAction, PlanGoal, PlanResult, ControlAction, ControlGoal, ControlResult, Point
-import assignment_1
-from std_msgs.msg import String
-from std_msgs.msg import Bool
+#import assignment_1.msg
+
+#import assignment_1
+from std_msgs.msg import String, Bool
 
 battery_is_low = False
 
 class Mapping(State):
     """
-    Class implementing the Mapping state of the finite state machine
+    Class implementing the Mapping state of the state machine
     """
     def __init__(self):
-        """
-        Initialise the Mapping state.
-        It sets the state outcomes.
-        """
-        State.__init__(self,
-                             outcomes=['map_loaded'],
-                             )
+        State.__init__(self, outcomes=['map_loaded'])
+        self.scanning_time = rospy.get_param("scanning_time", 5)
 
     def execute(self, userdata):
         """
         Mapping state callback
+        Sends a goal "load_map" to the scanner node and wait for it to end
         """
         print(' ')
         rospy.loginfo('Executing state MAPPING')
 
-        goal = assignment_1.msg.SMCommandGoal()
+        time.sleep(self.scanning_time)
+
+        goal = assignment_1.msg.ScannerGoal()
         goal.command = 'load_map'
         scanner_client.send_goal(goal)
         scanner_client.wait_for_result()
 
-        #print(Scanner_client.get_result().res)
-        time.sleep(10)
         return 'map_loaded'
-        #return 'map_loaded'
 
 class Move(State):
+    """
+    Class implementing the Move state of the state machine
+    Manages the motion to a location:
+
+    - asks the Ontology Interface for the target.
+    - asks the Planner for a plan.
+    - asks the Controller to control the motion
+    - asks the Ontology Interface to set the new robot position in the ontology
+
+    """
     def __init__(self, type):
-        State.__init__(self,
-                             outcomes=['done','preempted'],
-                             )
-        self._type = type
+        State.__init__(self, outcomes=['done','preempted'], )
+        self._type = type   # distinguish a recharge move from a monitor move
 
     def execute(self, userdata):
         print(' ')
+
+        # get the next location from the ontolgy interface
         get_target = OICommandGoal()
         if self._type == 'recharge':
             get_target.command = 'recharge_room'
         elif self._type == 'monitor':
             get_target.command = 'next_room'
-        OI_client.send_goal(get_target)
 
+        # wait for the result and check if the state is preempted
+        OI_client.send_goal(get_target)
         while(OI_client.get_state() != 3):
             if self.preempt_requested():
                 OI_client.cancel_all_goals()
@@ -84,14 +96,16 @@ class Move(State):
                 return 'preempted'
         OI_client.wait_for_result()
 
+        # next location
         target = OI_client.get_result().res
-
         rospy.loginfo('Going to '+ target)
 
-        #HERE CALL PLANNER
+        #PLANNER
         get_plan = PlanGoal()
         get_plan.target = Point(x=random.uniform(0, 100),
                                 y=random.uniform(0, 100))
+
+        # wait for the result and check if the state is preempted
         planner_client.send_goal(get_plan)
         while(planner_client.get_state() != 3):
             if self.preempt_requested():
@@ -100,12 +114,14 @@ class Move(State):
                 return 'preempted'
         planner_client.wait_for_result()
 
-
+        # plan
         plan = planner_client.get_result()
 
-        #HERE CALL CONTROLLER
+        #CONTROLLER
         goal = ControlGoal()
         goal.via_points = plan.via_points
+
+        # wait for the result and check if the state is preempted
         controller_client.send_goal(goal)
         while(controller_client.get_state() != 3):
             if self.preempt_requested():
@@ -114,9 +130,12 @@ class Move(State):
                 return 'preempted'
         controller_client.wait_for_result()
 
+        # update the robot position in the ontology
         set_new_room = OICommandGoal()
         set_new_room.command = 'move_to'
         set_new_room.location = target
+
+        # wait for the result and check if the state is preempted
         OI_client.send_goal(set_new_room)
         while(OI_client.get_state() != 3):
             if self.preempt_requested():
@@ -126,130 +145,111 @@ class Move(State):
         OI_client.wait_for_result()
 
         rospy.loginfo('Reached '+ target)
-
         return 'done'
 
 
 
 class Monitor(State):
+    """
+    Class implementing the Monitor state of the state machine
+    Waits for the given time while checking if the state is preempted
+    """
     def __init__(self):
-        State.__init__(self,
-                             outcomes=['done'],
-                             )
+        State.__init__(self, outcomes=['done','preempted'] )
         self.monitoring_time = rospy.get_param("monitoring_time", 10)
 
     def execute(self, userdata):
-        # print(' ')
         rospy.loginfo('Monitoring the environment')
-        time.sleep(self.monitoring_time)
+
+        # this should be replaced with the actual code for exploring the environment
+        for x in range(self.monitoring_time):
+            if self.preempt_requested():
+                self.service_preempt()
+                return 'preempted'
+            time.sleep(1)
+
         return 'done'
 
 class Recharge(State):
+    """
+    Class implementing the Recharge state of the state machine
+    Waits for the given time while checking if the state is preempted
+    """
     def __init__(self):
-        State.__init__(self,
-                             outcomes=['done'],
-                             )
+        State.__init__(self, outcomes=['done'] )
         self.recharging_time = rospy.get_param("recharging_time", 10)
+
     def execute(self, userdata):
         # print(' ')
         rospy.loginfo('Recharging')
-        time.sleep(self.recharging_time)
+
+        # this should be replaced with the actual code for recharging the robot
+        for x in range(self.recharging_time):
+            if self.preempt_requested():
+                self.service_preempt()
+                return 'done'
+            time.sleep(1)
+
         return 'done'
-
-
-# class Recharge(State):
-#     def __init__(self):
-#         State.__init__(self,
-#                              outcomes=['done'],
-#                              )
-#
-#
-#     def execute(self, userdata):
-#         global battery_is_low
-#         print(' ')
-#         rospy.loginfo('Executing state RECHARGE ')
-#
-#         get_recharge_room = OICommandGoal()
-#         get_recharge_room.command = 'recharge_room'
-#         OI_client.send_goal(get_recharge_room)
-#         while(OI_client.get_state() != 3):
-#             if self.preempt_requested():
-#                 OI_client.cancel_all_goals()
-#                 self.service_preempt()
-#                 return 'battery_low'
-#         OI_client.wait_for_result()
-#         recharge_room = OI_client.get_result().res
-#
-#         rospy.loginfo('Going to '+ recharge_room)
-#
-#         #CALL PLANNER
-#         # while(planner_client.get_state() != 3):
-#         #     if self.preempt_requested():
-#         #         planner_client.cancel_all_goals()
-#         #         self.service_preempt()
-#         #         return 'battery_low'
-#         # planner_client.wait_for_result()
-#         # plan = planner_client.get_result().list
-#
-#         #CALL CONTROLLER
-#         # while(controller_client.get_state() != 3):
-#         #     if self.preempt_requested():
-#         #         controller_client.cancel_all_goals()
-#         #         self.service_preempt()
-#         #         return 'battery_low'
-#         # controller_client.wait_for_result()
-#         # done_control = controller_client.get_result().list
-#
-#
-#         # WHAT DOES THE RECHARGING????
-#
-#         # recharge = OICommandGoal()
-#         # recharge.command = 'recharge'
-#         # OI_client.send_goal(recharge)
-#         # while(OI_client.get_state() != 3):
-#         #     if self.preempt_requested():
-#         #         OI_client.cancel_all_goals()
-#         #         self.service_preempt()
-#         #         #battery_is_low = False
-#         #         rospy.loginfo('Recharged!')
-#         #         return 'done'
-#         # OI_client.wait_for_result()
-#
-#         battery_is_low = False
-#         rospy.loginfo('Recharged!')
-#         return 'done'
-
 
 
 # gets called when ANY child state terminates
 def child_term_cb(outcome_map):
-  # terminate ALL the child states
-  return True
+    """
+    Function called when an inner state terminate
+    It just terminates all the inner states
+    """
+    # terminate ALL the child states
+    return True
 
 # gets called when ALL child states are terminated
 def out_cb_monitoring(outcome_map):
-   if outcome_map['EXECUTE'] == 'preempted':
-      return 'battery_low'
-   else:
-      return 'monitoring_done'
+    """
+    Function called when all the MONITORING-state's inner states terminate
+    It chose the outcome of the main state
+
+    Returns:
+        'battery_low' if the inner state machine EXECUTE  has been preempted
+
+        'monitoring_done' if EXECUTE ended the execution
+    """
+    if outcome_map['EXECUTE'] == 'preempted':
+        return 'battery_low'
+    else:
+        return 'monitoring_done'
 def out_cb_recharge(outcome_map):
-      return 'recharge_done'
+    """
+    Function called when all the RECHARGING-state's inner states terminate
+    It sets the outcome of the main state
+
+    Returns:
+        'recharge_done'
+    """
+    global battery_is_low
+    battery_is_low = False  # update the boolean, the battery is high
+    return 'recharge_done'
 
 def monitor_cb(ud, msg):
+    """
+    Function called when a message is published in the battery_status topic
+    Decides if preempting the states based on the message
+    """
     global battery_is_low
-    #string =
     rospy.loginfo('BATTERY STATUS UPDATE: is battery low? --> ' + str(msg.data))
-    # rospy.loginfo('BATTERY STATUS UPDATE: is battery low? --> ')
-    # rospy.loginfo(msg.data)
+
+    # if the message doesn't bring an update
     if battery_is_low == msg.data :
-        #rospy.loginfo('BATTERY STATUS UPDATE: is battery low? --> '+msg.data)
+        # make the execution continue
         return True
-    #print('change status!!')
-    battery_is_low = msg.data
+    battery_is_low = msg.data # update the value
+    # stop the execution, a change in states is required
     return False
 
 
 def main():
+    """
+    This function initializes the ROS node, the state machine and the clients for the :mod:`scanner`, :mod:`planner`, :mod:`controller` and :mod:`ontology_interface` modules.
+    """
     global OI_client, scanner_client, planner_client, controller_client
     rospy.init_node('state_machine')
 
@@ -277,8 +277,8 @@ def main():
                                  transitions={'done':'MONITOR',
                                               'preempted':'preempted'})
                 StateMachine.add('MONITOR', Monitor(),
-                                 transitions={'done':'monitoring_done',})
-                                              #'preempted':'preempted'})
+                                 transitions={'done':'monitoring_done',
+                                              'preempted':'preempted'})
             Concurrence.add('EXECUTE',
                             sm_monitoring_exe)
 
@@ -319,7 +319,7 @@ def main():
                                              assignment_1.msg.OICommandAction)
 
     scanner_client = actionlib.SimpleActionClient('action_scanner',
-                                             assignment_1.msg.SMCommandAction)
+                                             assignment_1.msg.ScannerAction)
 
     planner_client = actionlib.SimpleActionClient('action_planner',
                                              assignment_1.msg.PlanAction)

@@ -1,5 +1,17 @@
 #! /usr/bin/env python
 
+"""
+.. module::controller
+    :platform: Unix
+    :synopsis: Python module for the state machine
+
+ROS node for implementing a controller.
+
+Being a simpler version, for the documentation please refer to `the original code <https://github.com/buoncubi/arch_skeleton>`_
+
+
+"""
+
 import rospy
 import actionlib
 from actionlib import SimpleActionServer
@@ -10,7 +22,6 @@ import assignment_1.msg
 import random
 from assignment_1.srv import *
 from assignment_1.msg import ControlResult
-from armor_api.armor_client import ArmorClient
 
 class ControllerAction(object):
     def __init__(self):

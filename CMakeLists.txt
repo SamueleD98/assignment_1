@@ -70,7 +70,7 @@ find_package(catkin REQUIRED COMPONENTS
    DIRECTORY
    action
    FILES
-#   Scanner.action
+   Scanner.action
    OICommand.action
    Plan.action
    Control.action

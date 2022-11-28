@@ -1,9 +1,13 @@
-#goal
-#string goal
+### Action Server Goal
+
+string command
+
 ---
-#result
-string ontology_path
-string ontology_iri
+
+### Action Server Result
+
+string res
+
 ---
-#feedback
-int8 percentage
+
+### Action Server Feedback
