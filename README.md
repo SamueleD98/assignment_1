@@ -262,9 +262,11 @@ Now, the robot, which has completed a full recharge, continues monitoring the lo
 
 ### System's limitations
 - The code highly depends on the scenario: it refers to robots, rooms and locations. Re-using this code for a similar application would require re-naming most of the system's elements.
+- The simulated battery is pretty far from a realistic one. It should decrease accordingly to the motion made.
+- Since the rooms are chosen randomly among the eligibles, could happen that an urgent room is not visited for a relatively long time
 ### Possible technical improvements
 - For now, actions do not return any feedback during their execution. It can be useful to implement them.
-- A room is chosen randomnly from the urgent list. It would be better to chose the one not visited for the longest time. This would require to store that information for every room or, equivalently, to query the ontology, each time, for all the rooms' *visitedAt* value.
+- Rooms are chosen randomnly from the urgent list. It would be better to chose the one not visited for the longest time. This would require to store that information for every room or, equivalently, to query the ontology, each time, for all the rooms' *visitedAt* value.
 - Once done the previous, it would be necessary to give the robot the ability of planning path for reaching also locations not adjacent (maybe by following the reachable locations to build a tree and then chosing the path that leads to the target with the least steps)
 - The monitor and the recharge phase should call an external node for their execution, meanwhile the state machine should just check if the state is preempted and act accordingly.
 - Upon implementing an actual planner and controller, there will be the need of mapping each location to a point that will be passed to the planner as target.
@@ -272,5 +274,5 @@ Now, the robot, which has completed a full recharge, continues monitoring the lo
 
 ## Contact me
 Samuele Depalo  
-Personal mail: [depalo.samuele@gmail.com](depalo.samuele@gmail.com)  
-Istitutional mail: [s5153930@studenti.unige.it](s5153930@studenti.unige.it)
+- Personal mail: [depalo.samuele@gmail.com](depalo.samuele@gmail.com)  
+- Istitutional mail: [s5153930@studenti.unige.it](s5153930@studenti.unige.it)
