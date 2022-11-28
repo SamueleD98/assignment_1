@@ -24,7 +24,7 @@ Here how the robot should behave:
 - The maps follow the same scheme as the one given for the assignment (i.e. same ontology, different ABox)
 - The robot starts its motion with enough energy to load the map (so a *battery low* stimulus is ignored in that state). Otherwise the robot wouldn't be able to reach the recharge room since if it didn't load the information about the environment before the stimulus.
 - When low on battery, the robot is able to reach the recharging room even if this is not adjacent to the current location.
-- May happens the battery result full after a *battery low* signal comes. Why this, it's not part of the discusion (could be a battery level misreading,  poor/defective hardware,.. ).
+- May happens the battery results full after a *battery low* signal comes. Why this, it's not part of the discusion (could be a battery level misreading,  poor/defective hardware,.. ).
 
 ### Package List
 
@@ -62,21 +62,27 @@ There are also files related to the ROS architecture (*CMakeLists.txt* and *pack
 
 ### The state machine  
 
-Here a representation of the implemented state machine:
-![state_machine](images/state_diagram.png)  
+Here a representation of the implemented state machine:  
+
+![Screenshot from 2022-11-28 18-54-25](https://user-images.githubusercontent.com/28822110/204347333-f409578f-12b5-4ed9-be1f-ffa0569c5e7f.png)
+
+<!-- ![state_machine](images/state_diagram.png)  
+
 In order to simplify the diagram, the connection among states don't show the stimulus name but, instead, it's possible to distinguish by the color the normal flow of the machine (black arrows) from the stimulus due to a change in the battery status (red arrows).  
+-->
 
 The desired behaviour can be easily implemented using three (main) states:
 1. A **Mapping** state: here the information about the environment (.owl file) is loaded to be avaiable at need.
 2. A **Monitoring** state: the robot is expected to move across rooms and observe, *monitor*, the environment (although in this work the monitoring task consist of busy waiting).
 3. A **Recharging** state: once the system is notified the battery is low, the robot should move to a specific location for recharging  
 
-This state machine has the particularity of being hierarchical: both the Monitoring and the Recharging state consist of three inner states. Also, while the system can be in just one state in the outer state machine, this is not valid for the inner ones: those are concurrent state machines. 
+This state machine has the particularity of being hierarchical: both the Monitoring and the Recharging state consist of an inner state and an inner state machine (EXECUTE) with other two states. Also, while the system can be in just one state in the outer state machine, this is not valid for the inner ones: the main states are concurrent state machines. 
 
-Here a description of the three inner states:
+Here a description of the inner state machine EXECUTE:
 1. **Move** state: it retrieves the next target location for the robot and interacts with the planner, and then the controller, in order to reach that location.
-2. **Monitor**/**Recharge** state: in this implementation these states actually consist in busy waiting for a given time, simulating the actual task the robot should carry in that time (either exploring the environment or recharging itself).
-3. **Check Battery status** state: this is a [Monitor state](http://wiki.ros.org/smach/Tutorials/MonitorState), a particular kind of states that *Smach* allows to use. It works in [concurrence](http://wiki.ros.org/smach/Tutorials/Concurrent%20States) with the other state machine (consisting of the two previosuly described states) waiting for a message to be published in a specific topic: '/battery_status'. Once something is published a callback is called to decide if due to this change in the battery level, the current state machine should be preempted for the other main state.  
+2. **Monitor**/**Recharge** state: in this implementation these states actually consist in busy waiting for a given time, simulating the actual task the robot should carry in that time (either exploring the environment or recharging itself).  
+
+The last inner state is the **Check Battery status** state: this is a [Monitor state](http://wiki.ros.org/smach/Tutorials/MonitorState), a particular kind of states that *Smach* allows to use. It works in [concurrence](http://wiki.ros.org/smach/Tutorials/Concurrent%20States) with the EXECUTE state machine, waiting for a message to be published on a specific topic: '/battery_status'. Once something is published a callback is called to decide if due to this change in the battery level, the current state machine should be preempted for the other main state.  
 
 **Why not having a main MOVE state?**  
 The motion between locations could be considered a single main state. This state, though, should have a different behaviour depending on the situation (monitoring/recharging) in both choosing the next location and in terms of being preempted when a stimulus arrives (if the robot is already going to the recharging room and a *battery low* signal arrives, the robot shouldn't stop the motion for that room a start it from the beginning). So, implementing two different **move** states reduce consistently the complexity of the execution and, more, increase the modularity (what if I want one of the monitor states to monitor a topic and the other state a different one?). The code is however simple: they are created from the same class ( *Move* ) but with a slightly different configuration (more of this later).  
@@ -93,7 +99,7 @@ Choosing of separating the motion of the robot from the main task of the two sta
 Here how the state machine evolves over time:  
 ![temporal_diagram](images/temporal_diagram.png)  
 Normally the robot should keep moving from location to location.  
-When a *battery low* signal is received, the **Monitoring** state is preempted and the execution goes to the **Recharging** state. From there, either the robot goes in the recharging room a wait for itself to be fully recharged or, could happen, a new signal comes (*battery high*) before it could even reach the room. In that case it's the **Recharging** state to be preempted for the Monitoring one: there's no point in going to recharge it the robot has still power. 
+When a *battery low* signal is received, the **Monitoring** state is preempted and the execution goes to the **Recharging** state. From there, either the robot goes in the recharging room a wait for itself to be fully recharged or, could happen, a new signal comes (*battery high*) before it could even reach the room. In that case it's the **Recharging** state to be preempted for the Monitoring one: there's no point in going to recharge if the robot has still power. 
 
 ### Software components
 
@@ -103,15 +109,16 @@ It follows the details of each software component implemented in this repository
 It implements the robot's behaviour.
 Four different kind of state's implementation are described in as many classes: *Mapping()*, *Move()*, *Monitor()* and *Recharge()*.    
 The execute of a Mapping() state simply send a goal to the Scanner node for loading the map and waits for it to end.  
-Move(), depending on the "type" argument, either asks to the Ontology Interface node for the next room to visit or it asks for the recharging room. After, it send a goal first to the planner and then to the controller for planning and control the motion to the target. Finally, it asks the Ontology Interface to update the robot position in the ontology.  
+Move(), depending on the "type" argument, either asks to the Ontology Interface node for the next room to visit or it asks for the recharging room.  
+After, it sends a goal to the planner, first, and then to the controller for planning and control the motion to the target. Finally, it asks the Ontology Interface to update the robot position in the ontology.   
 Mind that the *wait_for_result()* instructions placed after the while loops are there just to syncronize the code with the action result. If it weren't for those, as soon as the *get_result()* instruction was called, an error would raise because the result is not available yet.  
 In Monitor() and Recharge() there's only a busy waiting, to simulate the time the robot should spend performing those actions.  
 The main code consist in setting the node, configuring the state machine as already described, starting the server for visualization, initializing the action clients, waiting for the actions servers and finally executing the state machine.  
-Important to mention three callbacks:
-- monitor_cb() is called when a new message is published in /battery_status and terminates its execution only if the new battery status is different from the old one. This in order to ignore consecutive messages with the same information (if the robot already knows the battery is low and it's going to recharge, it should not interrupt this action if a new *battery low* message arrives)
-- child_term_cb() is called when any of the concurrence states terminates and simply terminates all the other states. This because, having a monitor state (which terminate its execution when the battery status changes) in concurrence with the monitoring/recharging states, the desired behavior consist in preempting one of these states when the other terminates (i.e. the battery status goes to low --> the check_battery_status state terminates its execution --> preempt the monitoring states for recharging, or, viceversa, the battery status goes to high --> the check_battery_status state terminates its execution --> preempt the recharging states for monitoring).
-- out_cb_monitoring() is called when all the concurrent states are terminated and decides which outcome the concurrence state machine, in the monitoring state, should return. If the inner *EXECUTE* state machine has been preempted from the *Check Battery status* then the outcome is *battery_low*, else the outcome is *monitoring_done*.
-- out_cb_recharge() is similar to the precedent. In this case, though, it always returns *recharge_done* because either the robot terminate the recharging execution or the state is preempted because a *battery high* update is received.
+Important to mention four callbacks:
+- **monitor_cb()** is called when a new message is published in /battery_status and terminates its execution only if the new battery status is different from the old one. This in order to ignore consecutive messages with the same information (if the robot already knows the battery is low and it's going to recharge, it should not interrupt this action if a new *battery low* message arrives)
+- **child_term_cb()** is called when any of the concurrence states terminates and simply terminates all the other states. This because, having a monitor state (which terminate its execution when the battery status changes) in concurrence with the monitoring/recharging states, the desired behavior consist in preempting one of these states when the other terminates (i.e. the battery status goes to low --> the check_battery_status state terminates its execution --> preempt the monitoring states for recharging, or, viceversa, the battery status goes to high --> the check_battery_status state terminates its execution --> preempt the recharging states for monitoring).
+- **out_cb_monitoring()** is called when all the concurrent states are terminated and decides which outcome the concurrence state machine, in the monitoring state, should return. If the inner *EXECUTE* state machine has been preempted from the *Check Battery status* then the outcome is *battery_low*, else the outcome is *monitoring_done*.
+- **out_cb_recharge()** is similar to the precedent. In this case, though, it always returns *recharge_done* because either the robot terminate the recharging execution or the state is preempted because a *battery high* update is received.
 
 Actions:  
 - *OntologyInterface*, client
@@ -122,8 +129,8 @@ Actions:
 
 #### The Ontology Interface node  
 
-This node provides an interface for all the other components to the armor server, allowing them to query and manipulate an ontology in a easier and modular way. By doing so, the other components (e.g. planner, controller) have no commands related to the armor server connection.  
-The node presents a *SimpleActionServer* which possible goals are:
+This node provides an interface for all the other components to the [armor](https://github.com/EmaroLab/armor) server, allowing them to query and manipulate an ontology in a easier and modular way. By doing so, the other components (e.g. planner, controller) have no commands related to the armor server connection.  
+The node presents a [SimpleActionServer](http://wiki.ros.org/actionlib_tutorials/Tutorials/SimpleActionServer%28ExecuteCallbackMethod%29) which possible goals are:
 - *load_map*: load the ontology specified in the rosparams server, save lists of names of the main locations and also the name of the robot, update the urgency threshold with the one given as parameter, call the reasoner and update the robot's *now* timestamp.
 - *next_room*: find the next location the robot should visit following a predetermined algorithm. It retrieves the urgent rooms as the elements that are both in the urgent locations list and in the rooms list, then takes one of those which are also reachables. If there are none, it choose a reachable corridor. If no corridors nor urgent rooms are avaiable, it takes randomly a reachable location.
 - *move_to*: once the robot reaches a new location, the node update both its position in the ontology and the *visitedAt* value for the new location.
@@ -132,6 +139,8 @@ The node presents a *SimpleActionServer* which possible goals are:
 The functions pretty much corresponds to the actions the server is able to carry out. There are two more functions which are often called during the computation:
 - *update_timestamp*: like already mentioned it updates the *now* timestamp of the robot and calls the reasoner.
 - *clean_response_list*: the responses returned by the armor queries have to be processed before using them. Firstly the function retrieves a list from the response and then removes the *IRI* plus some special character from each element. When it's dealing with a timestamp, it removes also the string '^^xsd:long'.  
+
+Mind that all the calls to the armor server are made with the [armor_py_api](https://github.com/EmaroLab/armor_py_api) and following [these](https://github.com/EmaroLab/armor/blob/master/commands.md) tips. Please refer to those page for tutorials and documentation.
 
 Services:
 - /armor_interface_srv (waits for it to be ready)
