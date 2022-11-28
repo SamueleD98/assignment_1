@@ -72,10 +72,10 @@ The desired behaviour can be easily implemented using three (main) states:
 
 This state machine has the particularity of being hierarchical: both the Monitoring and the Recharging state consist of three inner states. Also, while the system can be in just one state in the outer state machine, this is not valid for the inner ones: those are concurrent state machines. 
 
-The particularity of this state machine is its concurrent, hierarchical structure. In fact, both the Monitoring and the Recharging state consist of three inner states:
+Here a description of the three inner states:
 1. **Move** state: it retrieves the next target location for the robot and interacts with the planner, and then the controller, in order to reach that location.
 2. **Monitor**/**Recharge** state: in this implementation these states actually consist in busy waiting for a given time, simulating the actual task the robot should carry in that time (either exploring the environment or recharging itself).
-3. **Check Battery status** state: this is a *Monitor* state, a particular kind of states that *Smach* allows to use. It works in *concurrence* with the other state machine (consisting of the two previosuly described states) waiting for a message to be published in a specific topic: '/battery_status'. Once something is published a callback is called to decide if due to this change in the battery level, the current state machine should be preempted for the other main state.  
+3. **Check Battery status** state: this is a [Monitor state](http://wiki.ros.org/smach/Tutorials/MonitorState), a particular kind of states that *Smach* allows to use. It works in [concurrence](http://wiki.ros.org/smach/Tutorials/Concurrent%20States) with the other state machine (consisting of the two previosuly described states) waiting for a message to be published in a specific topic: '/battery_status'. Once something is published a callback is called to decide if due to this change in the battery level, the current state machine should be preempted for the other main state.  
 
 **Why not having a main MOVE state?**  
 The motion between locations could be considered a single main state. This state, though, should have a different behaviour depending on the situation (monitoring/recharging) in both choosing the next location and in terms of being preempted when a stimulus arrives (if the robot is already going to the recharging room and a *battery low* signal arrives, the robot shouldn't stop the motion for that room a start it from the beginning). So, implementing two different **move** states reduce consistently the complexity of the execution and, more, increase the modularity (what if I want one of the monitor states to monitor a topic and the other state a different one?). The code is however simple: they are created from the same class ( *Move* ) but with a slightly different configuration (more of this later).  
@@ -83,8 +83,7 @@ The motion between locations could be considered a single main state. This state
 **Why concurrent?**  
 While the system can be in just one state in the outer state machine, this is not valid for the inner ones. In fact the *Check Battery status* is always active during the execution of the monitoring/recharging phase.  
 Alternatively, the syncronization among subsribers and action servers should require mutexes and a much complex software.  
-By exploiting the full potential of SMACH with this concurrent structure, the transitions among states are guaranteed to be executed as soon as a stimulus arrives. It is also modular: the same *Check Battery status* state can process any message published on the given topic and so distinguish different kind of stimulus. This Smach.Monitor states are not computationally expensive and so they don't delay the concurrent state's execution of much. 
-
+By exploiting the full potential of *Smach* with this concurrent structure, the transitions among states are guaranteed to be executed as soon as a stimulus arrives. It is also modular: the same *Check Battery status* state can process any message published on the given topic and so distinguish different kind of stimulus. This Smach's Monitor states are not computationally expensive and so they don't delay the concurrent state's execution of a considerable time. 
 
 **Why hierarchical?**  
 Choosing of separating the motion of the robot from the main task of the two states (Monitoring and Recharge) increases the modularity: in fact, doing so, allow to change one of the two tasks by just modyfing the inner state and leaving as it is the other. Even more, by adding another inner state you can easily increase the tasks of the robot.
@@ -97,7 +96,7 @@ When a *battery low* signal is received, the **Monitoring** state is preempted a
 
 ### Software components
 
-It follows the details of each software component implemented in this repository, which is available in the scripts/ folder.
+It follows the details of each software component implemented in this repository, which is available in the *scripts/* folder.
 
 #### The State Machine node  
 It implements the robot's behaviour.
@@ -257,6 +256,7 @@ Now, the robot, which has completed a full recharge, continues monitoring the lo
 - A room is chosen randomnly from the urgent list. It would be better to chose the one not visited for the longest time. This would require to store that information for every room or, equivalently, to query the ontology, each time, for all the rooms' *visitedAt* value.
 - Once done the previous, it would be necessary to give the robot the ability of planning path for reaching also locations not adjacent (maybe by following the reachable locations to build a tree and then chosing the path that leads to the target with the least steps)
 - The monitor and the recharge phase should call an external node for their execution, meanwhile the state machine should just check if the state is preempted and act accordingly.
+- Upon implementing an actual planner and controller, there will be the need of mapping each location to a point that will be passed to the planner as target.
 
 
 ## Contact me
