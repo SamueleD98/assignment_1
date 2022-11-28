@@ -2,6 +2,7 @@
 
 **A ROS-based exercise for the Experimental Robotics Laboratory course held at the University of Genoa.**  
 Author: *Samuele Depalo*
+[Code documentation](https://samueled98.github.io/assignment_1/)
 
 ---
 
