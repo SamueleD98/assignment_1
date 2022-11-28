@@ -103,6 +103,7 @@ It implements the robot's behaviour.
 Four different kind of state's implementation are described in as many classes: *Mapping()*, *Move()*, *Monitor()* and *Recharge()*.    
 The execute of a Mapping() state simply send a goal to the Scanner node for loading the map and waits for it to end.  
 Move(), depending on the "type" argument, either asks to the Ontology Interface node for the next room to visit or it asks for the recharging room. After, it send a goal first to the planner and then to the controller for planning and control the motion to the target. Finally, it asks the Ontology Interface to update the robot position in the ontology.  
+Mind that the *wait_for_result()* instructions placed after the while loops are there just to syncronize the code with the action result. If it weren't for those, as soon as the *get_result()* instruction was called, an error would raise because the result is not available yet.  
 In Monitor() and Recharge() there's only a busy waiting, to simulate the time the robot should spend performing those actions.  
 The main code consist in setting the node, configuring the state machine as already described, starting the server for visualization, initializing the action clients, waiting for the actions servers and finally executing the state machine.  
 Important to mention three callbacks:
