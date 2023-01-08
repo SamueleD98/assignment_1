@@ -1,4 +1,4 @@
-# ExpRobLab_FirstAssignment
+# ExpRobLab_SecondAssignment
 
 **A ROS-based exercise for the Experimental Robotics Laboratory course held at the University of Genoa.**  
 Author: *Samuele Depalo*  
@@ -12,7 +12,7 @@ This repository contains ROS-based software for controlling a robot. The main co
 
 ### Scenario
 
-The considered mobile robot retrieves environment related information from an ontology and uses this data for moving across locations. 
+The considered mobile robot retrieves environment related information from an ontology and uses this data for moving across locations.
 Here how the robot should behave:
 1. The robot should load a map before any other action
 2. The robot should move between corridors
@@ -38,7 +38,7 @@ The repository contains the following resources:
   - armor.launch: just run the armor server
   - system.launch: main launcher, use this
   - debug.launch: as the main one but the parameters are set for testing the system limits
-- msg --> messages' structure 
+- msg --> messages' structure
   - Point.msg: It is the message representing a 2D point
 - ontology --> .owl files
   - map1.owl: ontology as described in the assignment
@@ -58,7 +58,7 @@ There are also files related to the ROS architecture (*CMakeLists.txt* and *pack
 
 
 
-## Software architecture 
+## Software architecture
 
 ### The state machine  
 
@@ -76,7 +76,7 @@ The desired behaviour can be easily implemented using three (main) states:
 2. A **Monitoring** state: the robot is expected to move across rooms and observe, *monitor*, the environment (although in this work the monitoring task consist of busy waiting).
 3. A **Recharging** state: once the system is notified the battery is low, the robot should move to a specific location for recharging  
 
-This state machine has the particularity of being hierarchical: both the Monitoring and the Recharging state consist of an inner state and an inner state machine (EXECUTE) with other two states. Also, while the system can be in just one state in the outer state machine, this is not valid for the inner ones: the main states are concurrent state machines. 
+This state machine has the particularity of being hierarchical: both the Monitoring and the Recharging state consist of an inner state and an inner state machine (EXECUTE) with other two states. Also, while the system can be in just one state in the outer state machine, this is not valid for the inner ones: the main states are concurrent state machines.
 
 Here a description of the inner state machine EXECUTE:
 1. **Move** state: it retrieves the next target location for the robot and interacts with the planner, and then the controller, in order to reach that location.
@@ -90,7 +90,7 @@ The motion between locations could be considered a single main state. This state
 **Why concurrent?**  
 While the system can be in just one state in the outer state machine, this is not valid for the inner ones. In fact the *Check Battery status* is always active during the execution of the monitoring/recharging phase.  
 Alternatively, the syncronization among subsribers and action servers should require mutexes and a much complex software.  
-By exploiting the full potential of *Smach* with this concurrent structure, the transitions among states are guaranteed to be executed as soon as a stimulus arrives. It is also modular: the same *Check Battery status* state can process any message published on the given topic and so distinguish different kind of stimulus. This Smach's Monitor states are not computationally expensive and so they don't delay the concurrent state's execution of a considerable time. 
+By exploiting the full potential of *Smach* with this concurrent structure, the transitions among states are guaranteed to be executed as soon as a stimulus arrives. It is also modular: the same *Check Battery status* state can process any message published on the given topic and so distinguish different kind of stimulus. This Smach's Monitor states are not computationally expensive and so they don't delay the concurrent state's execution of a considerable time.
 
 **Why hierarchical?**  
 Choosing of separating the motion of the robot from the main task of the two states (Monitoring and Recharge) increases the modularity: in fact, doing so, allow to change one of the two tasks by just modyfing the inner state and leaving as it is the other. Even more, by adding another inner state you can easily increase the tasks of the robot.
@@ -99,7 +99,7 @@ Choosing of separating the motion of the robot from the main task of the two sta
 Here how the state machine evolves over time:  
 ![temporal_diagram](images/temporal_diagram.png)  
 Normally the robot should keep moving from location to location.  
-When a *battery low* signal is received, the **Monitoring** state is preempted and the execution goes to the **Recharging** state. From there, either the robot goes in the recharging room a wait for itself to be fully recharged or, could happen, a new signal comes (*battery high*) before it could even reach the room. In that case it's the **Recharging** state to be preempted for the Monitoring one: there's no point in going to recharge if the robot has still power. 
+When a *battery low* signal is received, the **Monitoring** state is preempted and the execution goes to the **Recharging** state. From there, either the robot goes in the recharging room a wait for itself to be fully recharged or, could happen, a new signal comes (*battery high*) before it could even reach the room. In that case it's the **Recharging** state to be preempted for the Monitoring one: there's no point in going to recharge if the robot has still power.
 
 ### Software components
 
@@ -153,7 +153,7 @@ Actions:
 #### The Robot State node  
 Similar to the one implemented in [arch_skeleton](https://github.com/buoncubi/arch_skeleton), this node implements two services (set_pose and get_pose) and a publisher (battery_status).
 
-The services allow setting and getting the current robot position, which is shared between the planner and the controller. 
+The services allow setting and getting the current robot position, which is shared between the planner and the controller.
 
 The battery_status message is published when the batter changes state. We consider two possible states: low battery (True is published) and recharged (False is published).
 The battery_time parameter is used to delay the published messages.
@@ -166,7 +166,7 @@ Services:
 - SetPose, server
 
 #### The Scanner node
-This node simulates a scanner which should retrieve information about the environment (e.g. from a QR code). 
+This node simulates a scanner which should retrieve information about the environment (e.g. from a QR code).
 For now it just send a goal to the Ontology Interface node for loading the ontology passed as parameter.  
 
 Actions:
