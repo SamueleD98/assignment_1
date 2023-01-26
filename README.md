@@ -150,16 +150,17 @@ Mind that all the calls to the armor server are made with the [armor_py_api](htt
 
 Services:
 - /armor_interface_srv (waits for it to be ready)
+- /room_info, client
 
 Actions:
 - OICommandAction, server
 
 
 
-#### The Robot State node  UPDATE IT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#### The Robot State node  
 Similar to the one implemented in [arch_skeleton](https://github.com/buoncubi/arch_skeleton), this node implements two services (set_pose and get_pose) and a publisher (battery_status).
 
-The services allow setting and getting the current robot position, which is shared between the planner and the controller.
+The services allow setting and getting the current robot position.
 
 The battery_status message is published when the batter changes state. We consider two possible states: low battery (True is published) and recharged (False is published).
 The battery_time parameter is used to delay the published messages.
@@ -178,6 +179,21 @@ As an action server, if it receives the 'load map' command, it will scan the env
 Actions:
 - ScannerAction, server
 - OICommandAction, client
+
+Services:
+- /room_info, client
+
+#### The Aruco Marker Publisher node 
+This node is an edited version of the one in [aruco_ros](https://github.com/CarmineD8/aruco_ros/tree/main/aruco_ros). This one, instead of printing a marker id once detected, send it on the topic 'aruco_marker_publisher/id'
+
+Messages:
+- aruco_marker_publisher/id, publisher
+
+#### The Marker Server node
+It provides the info about the locations according to the marker id
+
+Services:
+- /room_info, server
 
 ## Launching the Software
 
