@@ -6,6 +6,19 @@ Author: *Samuele Depalo*
 
 ---
 
+# Assignment2
+
+In this second assignment of the Experimental Robotics Laboratory course, the architecture developed in the first assignment is integrated with a robotic simulation.
+
+Below all the differences from the prior assignment are depicted. Also the documentation above linked has been integrated.
+
+
+
+
+
+
+
+
 ## Introduction
 
 This repository contains ROS-based software for controlling a robot. The main component is a state-machine that represent the robot behaviour according to the environment and to some stimulus.
