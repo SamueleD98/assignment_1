@@ -36,16 +36,21 @@ The repository contains the following resources:
 - action --> actions' structure
   - OICommand.action: It defines the goal and results concerning the ontology interface
   - Scanner.action: It defines the goal and result concerning the map scanning/loading
-  - Plan.action: It defines the goal and results concerning motion planning
-  - Control.action: It defines the goal and results concerning motion controlling
+- config
+  - motors_config.yaml: motors configuration 
+  - sim2.rviz:  rviz configuration
 - launcher --> ROS launchers
   - armor.launch: just run the armor server
-  - system.launch: main launcher, use this
-  - debug.launch: as the main one but the parameters are set for testing the system limits
+  - assignment.launch: open the world and spawns the robot
+  - system.launch: main launcher, use this after assignment.launch
+  - debug.launch: as the main one but every nodes outputs to screen
+  - display.lauch: displays the robot, used for developing it
 - msg --> messages' structure
   - Point.msg: It is the message representing a 2D point
+  - RoomConnection.msg: It is a message indicating the connection between locations
 - ontology --> .owl files
-  - map1.owl: ontology as described in the assignment
+  - map1.owl: ontology as described in the assignment (empty Abox)
+- param:  local and global planner configuration
 - scripts --> python scripts for the ROS nodes (described below)
   - state_machine.py
   - robot_state.py
@@ -53,13 +58,22 @@ The repository contains the following resources:
   - scanner.py
   - planner.py
   - controller.py
+- src --> c++ scripts for the ROS nodes (described below)
+  - aruco_ros_utils.cpp
+  - marker_publish.cpp
+  - marker_server.cpp
 - srv --> services' structure
   - GetPose.srv: It defines the request and response to get the current robot position
   - SetPose.srv: It defines the request and response to set the current robot position
+  - RoomInformation.srv: it defines the request and response for locations info
+- urdf --> robot structure
+  - robot2.gazebo
+  - robot2.xacro
+- worlds
+  - assignment_world.world: testing world
 - images --> images shown in this ReadMe
 
 There are also files related to the ROS architecture (*CMakeLists.txt* and *package.xml*) and to the code documentation (*Makefile*, *conf.py* and *index.rst*).
-
 
 ## Software architecture
 
