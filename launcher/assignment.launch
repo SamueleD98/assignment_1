@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+
+  <include file="$(find assignment_1)/launcher/sim_aruco.launch"/>
+
+
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen" args="--namespace=/robot_camera_laser
+        joint_state_controller
+        joint1_position_controller
+        joint2_position_controller
+        joint_camera_position_controller
+        --shutdown-timeout 3">
+    </node>
+
+
+</launch>

@@ -23,6 +23,7 @@ import time
 import roslib
 import assignment_1
 import assignment_1.msg
+from std_msgs.msg import String
 from assignment_1.srv import *
 from assignment_1.msg import OICommandAction, OICommandResult
 from armor_api.armor_client import ArmorClient
@@ -50,6 +51,9 @@ class OntologyInterface(object):
                                       OICommandAction,
                                       execute_cb=self.execute_callback,
                                       auto_start=False)
+
+        self.locations_info = rospy.ServiceProxy('room_info', RoomInformation)
+
         #self.map_loaded = False
 
         # params setup
@@ -64,6 +68,8 @@ class OntologyInterface(object):
         # define the armor client
         self.armor_client = ArmorClient(self.armor_client_id, self.armor_reference_name)
 
+        self.map_loaded = False
+
         rospy.wait_for_service('/armor_interface_srv', 30)
 
         self._as.start()
@@ -77,16 +83,20 @@ class OntologyInterface(object):
         result = OICommandResult()
 
         if(goal.command == 'load_map'):     # load a map
-            result.res = self.load_map()
-            self.map_loaded = True
+            result.res = self.load_map(goal.ids)
             self._as.set_succeeded(result)
-        # elif(not self.map_loaded):
-        #     #error
-        #     self._as.set_aborted()
-        #     return
+        elif(not self.map_loaded):
+             #error
+             self._as.set_aborted()
+             return
         elif(goal.command == 'next_room'):  # choose the next target
             self.update_timestamp() # update the "now" value for obtaining the correct urgent locations
-            result.res = self.choose_next_location()
+            data = self.choose_next_location()
+            result.res = data[0]
+            x = data[1]
+            y = data[2]
+            result.x = x[0]
+            result.y = y[0]
             self._as.set_succeeded(result)
         elif(goal.command == 'move_to'):    # set a new position for the robot
             target = goal.location
@@ -103,7 +113,7 @@ class OntologyInterface(object):
 
 
 
-    def load_map(self):
+    def load_map(self, ids):
         """
         Load the map as ontology and save the names of the robot and all the locations, rooms and corridors
         """
@@ -111,20 +121,106 @@ class OntologyInterface(object):
         #LOAD THE ONTOLOGY
         self.armor_client.utils.load_ref_from_file(self.ontology_path, self.ontology_iri, buffered_manipulation=False, reasoner=self.ontology_reasoner, buffered_reasoner=False, mounted=False)
 
+        ###  self.armor_client.utils.mount_on_ref()
+
+        self.robot = self.clean_response_list(self.armor_client.call('QUERY','IND','CLASS',['ROBOT']))[0]
+        # if not self.robot:
+        #     print('MTFCK')
+        #     self.robot = 'Robot1'
+
+        doors = self.clean_response_list(self.armor_client.call('QUERY','IND','CLASS',['DOOR']))
+        locations = self.clean_response_list(self.armor_client.call('QUERY','IND','CLASS',['LOCATION']))
+
+        print('Adding locations:')
+        for id in ids:
+            res = self.locations_info(int(id))
+
+            if res.room == "no room associated with this marker id":
+                return 'wrong_ids'
+
+            room = res.room;
+            print(room)
+            position_x = str(res.x);
+            position_y = str(res.y);
+            # if the room does not exist, add it
+            if(locations.count(room) == 0):
+                self.armor_client.call('ADD','IND','CLASS',[room, 'LOCATION'])
+                locations.append(room)
+            # add the coordinates
+            self.armor_client.call('ADD','DATAPROP','IND',['position_x', room, 'Float', position_x])
+            self.armor_client.call('ADD','DATAPROP','IND',['position_y', room, 'Float', position_y])
+
+            time_zero = str(0)
+            self.armor_client.call('ADD','DATAPROP','IND',['visitedAt',room,'Long',time_zero])
+
+            # rooms may have multiple connections
+            for x in res.connections:
+                conn_location = x.connected_to
+                conn_door = x.through_door
+
+                # if the door does not exist, add it
+                if(doors.count(conn_door) == 0):
+                    self.armor_client.call('ADD','IND','CLASS',[conn_door, 'DOOR'])
+                    doors.append(conn_door)
+                self.armor_client.call('ADD','OBJECTPROP','IND',['hasDoor', room, conn_door])
+
+                # actually the reasoner is able to understand the following by itself
+                # if the location does not exist, add
+                if(locations.count(conn_location) == 0):
+                    self.armor_client.call('ADD','IND','CLASS',[conn_location, 'LOCATION'])
+                    locations.append(conn_location)
+                #self.armor_client.call('ADD','OBJECTPROP','IND',['connectedTo', room, conn_location])
+
+
+        # here I should have the complete ontology, 7 ids for 7 markers
+        self.armor_client.call('DISJOINT','IND','CLASS',['LOCATION'])
+        ###  self.armor_client.call('REASON','','',[''])
+        self.update_timestamp()
+
+
+
         #SAVE THE CONSTANTS LISTS
+
         self.robot = self.clean_response_list(self.armor_client.call('QUERY','IND','CLASS',['ROBOT']))[0]
         self.locations = self.clean_response_list(self.armor_client.call('QUERY','IND','CLASS',['LOCATION']))
         self.rooms = self.clean_response_list(self.armor_client.call('QUERY','IND','CLASS',['ROOM']))
         self.corridors = self.clean_response_list(self.armor_client.call('QUERY','IND','CLASS',['CORRIDOR']))
 
+        # for location in self.locations:
+        #     for another_location in self.locations:
+        #         if location != another_location:
+        #             self.armor_client.call('ADD','OBJECTPROP','IND',['differentFrom', location, another_location])
+
+
+
+
+        self.armor_client.call('ADD','OBJECTPROP','IND',['isIn', self.robot, self.recharge_room])
+        old = str(0)
+        new = str(round(time.time()))
+        self.armor_client.call('REPLACE','DATAPROP','IND',['visitedAt',self.recharge_room,'Long',new,old])
+
         old_uT = self.clean_response_list(self.armor_client.call('QUERY','DATAPROP','IND',['urgencyThreshold',self.robot]))[0]
 
         self.clean_response_list(self.armor_client.call('REPLACE','DATAPROP','IND',['urgencyThreshold',self.robot,'Long',self.urgencyThreshold, old_uT]))
 
-        self.armor_client.call('REASON','','',[''])
+
+
+        ###  self.armor_client.utils.apply_buffered_changes()
+
+
+
+        ###  self.armor_client.call('REASON','','',[])
 
         self.update_timestamp()
 
+        ###  self.armor_client.utils.apply_buffered_changes()
+
+        ###  self.armor_client.call('APPLY', '', '', [])
+
+
+        ###  self.armor_client.call('SAVE', 'INFERENCE', '', ["/home/samuele/experimental_lab__ws/src/assignment_1/ontology/mapMODIFIED.owl"])
+        print('done')
+        self.map_loaded = True
         return 'map_loaded'
 
     def choose_next_location(self):
@@ -152,18 +248,36 @@ class OntologyInterface(object):
         #CHOOSE NEXT LOCATION FOLLOWING THE PRIORITY ALGORITHM
         #list of reachable urgent rooms
         target = [value for value in urgent_rooms if value in reachable]
+        #print(target)
+        #print(reachable)
+
         #if not empty
         if target:
             #take a random location from the list
-            return random.choice(target)
+            next = random.choice(target)
         #take the reachable corridors
         target = [value for value in self.corridors if value in reachable]
         #if not empty
         if target:
             #take a random location from the list
-            return random.choice(target)
+            next = random.choice(target)
         #take a random location from the reachable locations
-        return random.choice(reachable)
+        next = random.choice(reachable)
+
+
+        # if not target:
+        #     target = [value for value in self.corridors if value in reachable]
+        #     print(target)
+        #     if not target:
+        #         next = random.choice(reachable)
+        # next = random.choice(target)
+
+
+        position_x = self.clean_response_list(self.armor_client.call('QUERY','DATAPROP','IND',['position_x',next]))
+        position_y = self.clean_response_list(self.armor_client.call('QUERY','DATAPROP','IND',['position_y',next]))
+        return [next, position_x, position_y]
+
+
 
 
 
@@ -172,6 +286,7 @@ class OntologyInterface(object):
         Set a new robot location according to the input
         It replaces the robot's isIn value and the new location's visitedAt value with the new ones
         """
+
         old_uT = self.clean_response_list(self.armor_client.call('QUERY','DATAPROP','IND',['urgencyThreshold',self.robot]))[0]
 
         #print(old_uT)
@@ -211,6 +326,7 @@ class OntologyInterface(object):
         #remove the timestamp associated characters
         list = [s.replace('"', '') for s in list]
         list = [s.replace('^^xsd:long', '') for s in list]
+        list = [s.replace('^^xsd:float', '') for s in list]
         return list
 
 if __name__ == '__main__':

@@ -39,6 +39,8 @@
     <node pkg = "assignment_1"
           type = "scanner.py"
           name = "scanner"
+          output="screen"
+          launch-prefix="gnome-terminal --command"
            />
 
     <node pkg = "assignment_1"

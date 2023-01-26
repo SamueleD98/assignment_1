@@ -21,7 +21,7 @@
     <param name="monitoring_time" type="int" value="10" />
     <param name="recharging_time" type="int" value="10" />
 
-    <rosparam param="battery_time"> [5, 5] </rosparam>
+    <rosparam param="battery_time"> [10000, 10000] </rosparam>
 
     <!-- rosrun armor execute it.emarolab.armor.ARMORMainService -->
     <node pkg="armor"
@@ -41,20 +41,20 @@
     <node pkg = "assignment_1"
           type = "scanner.py"
           name = "scanner"
+          output="screen"
+          launch-prefix="gnome-terminal --command"
            />
 
     <node pkg = "assignment_1"
           type = "planner.py"
           name = "planner"
-          output="screen"
-          launch-prefix="gnome-terminal --command"
+
            />
 
    <node pkg = "assignment_1"
          type = "controller.py"
          name = "controller"
-         output="screen"
-         launch-prefix="gnome-terminal --command"
+
 
           />
 
@@ -71,11 +71,11 @@
           name = "robot_state"
           />
 
-    <node pkg = "smach_viewer"
+    <!--node pkg = "smach_viewer"
           type = "smach_viewer.py"
           name = "smach_viewer"
           output = "screen"
-    />
+    /-->
 
 
 </launch>

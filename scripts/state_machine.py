@@ -30,6 +30,7 @@ import random
 import actionlib
 from assignment_1.msg import OICommandGoal,ScannerAction, ScannerGoal, PlanAction, PlanGoal, ControlAction, ControlGoal, Point#, PlanResult ControlResult
 from assignment_1.srv import *
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 #import assignment_1.msg
 
 #import assignment_1
@@ -53,7 +54,7 @@ class Mapping(State):
         print(' ')
         rospy.loginfo('Executing state MAPPING')
 
-        time.sleep(self.scanning_time)
+        #time.sleep(self.scanning_time)
 
         goal = assignment_1.msg.ScannerGoal()
         goal.command = 'load_map'
@@ -76,6 +77,8 @@ class Move(State):
     def __init__(self, type):
         State.__init__(self, outcomes=['done','preempted'], )
         self._type = type   # distinguish a recharge move from a monitor move
+        self.move_base_client = actionlib.SimpleActionClient('move_base',MoveBaseAction)
+        self.move_base_client.wait_for_server()
 
     def execute(self, userdata):
         print(' ')
@@ -97,13 +100,17 @@ class Move(State):
         OI_client.wait_for_result()
 
         # next location
-        target = OI_client.get_result().res
+        result = OI_client.get_result()
+        target = result.res
+        pos_x = float(result.x)
+        pos_y = float(result.y)
         rospy.loginfo('Going to '+ target)
 
         #PLANNER
+        #actually there exist a make_plan srv for move_base
         get_plan = PlanGoal()
-        get_plan.target = Point(x=random.uniform(0, 100),
-                                y=random.uniform(0, 100))
+        get_plan.target = Point(x=pos_x,
+                                y=pos_y)
 
         # wait for the result and check if the state is preempted
         planner_client.send_goal(get_plan)
@@ -118,17 +125,33 @@ class Move(State):
         plan = planner_client.get_result()
 
         #CONTROLLER
-        goal = ControlGoal()
-        goal.via_points = plan.via_points
+        #goal = ControlGoal()
+        #goal.via_points = plan.via_points
 
         # wait for the result and check if the state is preempted
-        controller_client.send_goal(goal)
-        while(controller_client.get_state() != 3):
+        #controller_client.send_goal(goal)
+        #while(controller_client.get_state() != 3):
+        #    if self.preempt_requested():
+        #        controller_client.cancel_all_goals()
+        #        self.service_preempt()
+        #        return 'preempted'
+        #controller_client.wait_for_result()
+
+        #MOVE_BASE
+        goal = MoveBaseGoal()
+        goal.target_pose.header.frame_id = "map"
+        goal.target_pose.header.stamp = rospy.Time.now()
+        goal.target_pose.pose.position.x = pos_x
+        goal.target_pose.pose.position.x = pos_y
+        goal.target_pose.pose.orientation.w= 1.0;
+
+        self.move_base_client.send_goal(goal)
+        while(self.move_base_client.get_state() != 3):
             if self.preempt_requested():
-                controller_client.cancel_all_goals()
+                self.move_base_client.cancel_all_goals()
                 self.service_preempt()
                 return 'preempted'
-        controller_client.wait_for_result()
+        self.move_base_client.wait_for_result()
 
         # update the robot position in the ontology
         set_new_room = OICommandGoal()
