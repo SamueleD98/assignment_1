@@ -183,7 +183,7 @@ Actions:
 
 ### Dependencies
 
-In order to install and run this application, first you should install the *aRMOR* and the *SMACH* package (you can follow the procedure described [here](https://unigeit.sharepoint.com/sites/106723-ExperimentalRoboticsLaboratory/Class%20Materials/Forms/AllItems.aspx?id=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials%2FROS%2Dinstallation%2Emd&parent=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials)). Mind that the software also exploits [roslaunch](http://wiki.ros.org/roslaunch), [rospy](http://wiki.ros.org/rospy) and [actionlib](http://wiki.ros.org/actionlib/DetailedDescription).
+In order to install and run this application, first you should install the *aRMOR* and the *SMACH* package (you can follow the procedure described [here](https://unigeit.sharepoint.com/sites/106723-ExperimentalRoboticsLaboratory/Class%20Materials/Forms/AllItems.aspx?id=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials%2FROS%2Dinstallation%2Emd&parent=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials)). Mind that the software also exploits [roslaunch](http://wiki.ros.org/roslaunch), [rospy](http://wiki.ros.org/rospy), [roscpp](http://wiki.ros.org/roscpp), [actionlib](http://wiki.ros.org/actionlib/DetailedDescription), [aruco_ros](https://github.com/CarmineD8/aruco_ros/tree/main/aruco_ros) and [ros_control](http://wiki.ros.org/ros_control).
 
 ### Installation
 
@@ -194,11 +194,13 @@ Follow these steps to install:
 
 ### Launchers
 
-For running the software call the launcher with `roslaunch assignment_1 system.launch`.  
+For running the software call:
+1) `roslaunch assignment_1 assignment.launch`.  
+2) `roslaunch assignment_1 system.launch`.  
 This will set the parameters in the server, run the aRMOR server, the state machine and all the other necessary components later described.  
-The showed outputs are the state machine node's and the smach viewer's ones. Those are enough to show the robot behaviour
+The showed outputs are the state machine node's and the smach viewer's ones. It also opens gazebo and rviz.
 
-For further information you can call the `roslaunch assignment_1 debug.launch` which shows to screen all the components' output.
+For further information you can call the `roslaunch assignment_1 debug.launch` which shows to screen all the components' output (instead of system.launch).
 
 ### ROS Parameters  
 This software requires the following ROS parameters:
@@ -241,7 +243,7 @@ Now, the robot, which has completed a full recharge, continues monitoring the lo
 ### System's features
 - Independent from the ontology constitution: the system do not assume the names of the locations nor the robot one. After loading an ontology it just retrieves the necessary elements' names. This allow also to give the recharging room as parameter.
 - Highly parametrized: many aspect of the given scenario can be customized (giving any ABox for the used ontology, changing the execution times, recharging rooms,.. )
-- The scanner node is ready to implement the means for scanning the data (e.g. a qr code) representing the environment
+- The scanner node do not know a-priori the markers id but cross-cheks their validity
 - The recharge state can be preempted if the battery is high
 - Modular: it's easy to change the robot behaviour in every aspect. From the motion task to the monitoring of the environment, from how it retrieves the maps to how it plans and controls the motion.
 - Able to withstand a high rate of stimulus
@@ -253,9 +255,6 @@ Now, the robot, which has completed a full recharge, continues monitoring the lo
 ### Possible technical improvements
 - For now, actions do not return any feedback during their execution. It can be useful to implement them.
 - Rooms are chosen randomnly from the urgent list. It would be better to chose the one not visited for the longest time. This would require to store that information for every room or, equivalently, to query the ontology, each time, for all the rooms' *visitedAt* value.
-- Once done the previous, it would be necessary to give the robot the ability of planning path for reaching also locations not adjacent (maybe by following the reachable locations to build a tree and then chosing the path that leads to the target with the least steps)
-- The monitor and the recharge phase should call an external node for their execution, meanwhile the state machine should just check if the state is preempted and act accordingly.
-- Upon implementing an actual planner and controller, there will be the need of mapping each location to a point that will be passed to the planner as target.
 
 
 ## Contact me
