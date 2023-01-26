@@ -81,7 +81,7 @@ There are also files related to the ROS architecture (*CMakeLists.txt* and *pack
 
 Here a representation of the implemented state machine:  
 
-F[Screenshot from 2022-11-28 18-54-25](https://user-images.githubusercontent.com/28822110/204347333-f409578f-12b5-4ed9-be1f-ffa0569c5e7f.png)
+![Screenshot from 2022-11-28 18-54-25](https://user-images.githubusercontent.com/28822110/204347333-f409578f-12b5-4ed9-be1f-ffa0569c5e7f.png)
 
 <!-- ![state_machine](images/state_diagram.png)  
 
