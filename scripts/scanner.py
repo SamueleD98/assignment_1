@@ -44,7 +44,7 @@ class ScannerAction(object):
                                                  assignment_1.msg.OICommandAction)
         self.OI_client.wait_for_server()
 
-        #self.scanning_time = rospy.get_param("scanning_time", 5)
+        self.n_ids = rospy.get_param("n_ids", 7)
         # Publisher:
         self.set_camera_joint = rospy.Publisher('/robot_camera_laser/joint_camera_position_controller/command', Float64, queue_size=10)
         self.set_joint1 = rospy.Publisher('/robot_camera_laser/joint1_position_controller/command', Float64, queue_size=10)
@@ -65,13 +65,38 @@ class ScannerAction(object):
         if(goal.command == 'load_map'):
             result.res = self.load_map()
             self._as.set_succeeded(result)
+        elif(goal.command == 'scan_room'):
+            result.res = self.scan()
+            self._as.set_succeeded(result)
         else:
             #error
             self._as.set_aborted()
 
+    def scan(self):
+        """
+        Rotates the camera of 360 degrees
+        """
+        self.set_joint1.publish(0)
+        self.wait_for_joint(1)
+
+        self.set_joint1.publish(1.57)
+        self.wait_for_joint(1)
+
+        self.set_joint1.publish(3.14)
+        self.wait_for_joint(1)
+
+        self.set_joint1.publish(4.71)
+        self.wait_for_joint(1)
+
+        self.set_joint1.publish(0)
+        self.wait_for_joint(1)
+
+        return 'done'
+
+
     def load_map(self):
         """
-        Send a "load_map" goal to the ontology_interface and waits for it to succeed
+        Scan the markers and send the ids to the ontology_interface in order to load the map
         """
         #SCAN AND RETRIEVED THE IDs THEN PASS THEM TO ONTOLOGY
         self.ids = []
@@ -79,7 +104,7 @@ class ScannerAction(object):
         #print(ids)
 
 
-        while(len(self.ids) != 7):
+        while(len(self.ids) != self.n_ids):
             rotation_1 = -3
             rotation_2 = 0.5 #0.40
             rotation_3 = -0.8 #-0.5

@@ -13,7 +13,8 @@
 
     <param name="charging_station_in" type="str" value="E" />
 
-    <param name="scanning_time" type="int" value="0" />
+    <param name="n_ids" type="int" value="7" />
+    
     <rosparam param="planning_time"> [0, 0] </rosparam>
     <rosparam param="motion_time"> [0, 0] </rosparam>
 

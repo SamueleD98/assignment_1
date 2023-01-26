@@ -44,7 +44,6 @@ class Mapping(State):
     """
     def __init__(self):
         State.__init__(self, outcomes=['map_loaded'])
-        self.scanning_time = rospy.get_param("scanning_time", 5)
 
     def execute(self, userdata):
         """
@@ -77,8 +76,10 @@ class Move(State):
     def __init__(self, type):
         State.__init__(self, outcomes=['done','preempted'], )
         self._type = type   # distinguish a recharge move from a monitor move
+        self.set_pose = rospy.ServiceProxy('/set_pose', SetPose)
         self.move_base_client = actionlib.SimpleActionClient('move_base',MoveBaseAction)
         self.move_base_client.wait_for_server()
+
 
     def execute(self, userdata):
         print(' ')
@@ -105,37 +106,6 @@ class Move(State):
         pos_x = float(result.x)
         pos_y = float(result.y)
         rospy.loginfo('Going to '+ target)
-
-        #PLANNER
-        #actually there exist a make_plan srv for move_base
-        get_plan = PlanGoal()
-        get_plan.target = Point(x=pos_x,
-                                y=pos_y)
-
-        # wait for the result and check if the state is preempted
-        planner_client.send_goal(get_plan)
-        while(planner_client.get_state() != 3):
-            if self.preempt_requested():
-                planner_client.cancel_all_goals()
-                self.service_preempt()
-                return 'preempted'
-        planner_client.wait_for_result()
-
-        # plan
-        plan = planner_client.get_result()
-
-        #CONTROLLER
-        #goal = ControlGoal()
-        #goal.via_points = plan.via_points
-
-        # wait for the result and check if the state is preempted
-        #controller_client.send_goal(goal)
-        #while(controller_client.get_state() != 3):
-        #    if self.preempt_requested():
-        #        controller_client.cancel_all_goals()
-        #        self.service_preempt()
-        #        return 'preempted'
-        #controller_client.wait_for_result()
 
         #MOVE_BASE
         goal = MoveBaseGoal()
@@ -167,6 +137,12 @@ class Move(State):
                 return 'preempted'
         OI_client.wait_for_result()
 
+        # update the pose in robot_state
+        point = Point()
+        point.x = pos_x
+        point.y =pos_y
+        self.set_pose(point)
+
         rospy.loginfo('Reached '+ target)
         return 'done'
 
@@ -185,11 +161,18 @@ class Monitor(State):
         rospy.loginfo('Monitoring the environment')
 
         # this should be replaced with the actual code for exploring the environment
-        for x in range(self.monitoring_time):
+        goal = assignment_1.msg.ScannerGoal()
+        goal.command = 'scan_room'
+        scanner_client.send_goal(goal)
+
+        rospy.loginfo('here')
+
+        while(scanner_client.get_state() != 3):
             if self.preempt_requested():
+                scanner_client.cancel_all_goals()
                 self.service_preempt()
                 return 'preempted'
-            time.sleep(1)
+        scanner_client.wait_for_result()
 
         return 'done'
 
