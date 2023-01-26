@@ -30,7 +30,7 @@ Here how the robot should behave:
 - The robot starts its motion with enough energy to load the map (so a *battery low* stimulus is ignored in that state)
 - May happens the battery results full after a *battery low* signal comes. Why this, it's not part of the discusion (could be a battery level misreading,  poor/defective hardware,.. ).
 
-### Package List  UPDATEEEEEEEEEEEEEEEEEEEEEEEEEEEEE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+### Package List  
 
 The repository contains the following resources:
 - action --> actions' structure
@@ -90,14 +90,15 @@ In order to simplify the diagram, the connection among states don't show the sti
 
 The desired behaviour can be easily implemented using three (main) states:
 1. A **Mapping** state: here the information about the environment (.owl file) is loaded to be avaiable at need.
-2. A **Monitoring** state: the robot is expected to move across rooms and observe, *monitor*, the environment (although in this work the monitoring task consist of busy waiting).
-3. A **Recharging** state: once the system is notified the battery is low, the robot should move to a specific location for recharging  
+2. A **Monitoring** state: the robot is expected to move across rooms and observe, *monitor*, the environment.
+3. A **Recharging** state: once the system is notified the battery is low, the robot should move to a specific location for recharging.
 
 This state machine has the particularity of being hierarchical: both the Monitoring and the Recharging state consist of an inner state and an inner state machine (EXECUTE) with other two states. Also, while the system can be in just one state in the outer state machine, this is not valid for the inner ones: the main states are concurrent state machines.
 
 Here a description of the inner state machine EXECUTE:
-1. **Move** state: it retrieves the next target location for the robot and interacts with the planner, and then the controller, in order to reach that location.
-2. **Monitor**/**Recharge** state: in this implementation these states actually consist in busy waiting for a given time, simulating the actual task the robot should carry in that time (either exploring the environment or recharging itself).  
+1. **Move** state: it retrieves the next target location for the robot and gives it as a goal to move_base, in order to reach that location.
+2. **Monitor** state: scan the environment by turning the camera.
+3. **Recharge** state: in this implementation this state actually consist in busy waiting for a given time, simulating the recharging. 
 
 The last inner state is the **Check Battery status** state: this is a [Monitor state](http://wiki.ros.org/smach/Tutorials/MonitorState), a particular kind of states that *Smach* allows to use. It works in [concurrence](http://wiki.ros.org/smach/Tutorials/Concurrent%20States) with the EXECUTE state machine, waiting for a message to be published on a specific topic: '/battery_status'. Once something is published a callback is called to decide if due to this change in the battery level, the current state machine should be preempted for the other main state.  
 
