@@ -17,7 +17,7 @@ This repository contains ROS-based software for controlling a proposed robot.
 
 ### Scenario
 
-The considered mobile robot retrieves environment related information from some aruco markers (7!!!) next to it when spawned. This data are used for  moving across locations.
+The considered mobile robot retrieves environment related information from some aruco markers next to it when spawned. This data are used for  moving across locations.
 Here how the robot should behave:
 1. The robot should scan the markers and load a map before any other action
 2. The robot should move between corridors
@@ -81,7 +81,7 @@ There are also files related to the ROS architecture (*CMakeLists.txt* and *pack
 
 Here a representation of the implemented state machine:  
 
-![Screenshot from 2022-11-28 18-54-25](https://user-images.githubusercontent.com/28822110/204347333-f409578f-12b5-4ed9-be1f-ffa0569c5e7f.png)
+F[Screenshot from 2022-11-28 18-54-25](https://user-images.githubusercontent.com/28822110/204347333-f409578f-12b5-4ed9-be1f-ffa0569c5e7f.png)
 
 <!-- ![state_machine](images/state_diagram.png)  
 
@@ -184,9 +184,9 @@ Services:
 - GetPose, server
 - SetPose, server
 
-#### The Scanner node     UPDATEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#### The Scanner node   
 This node controls the camera arm in order to scan the enviroment for the Aruco markers at first, and then scan the locations once the robot reaches them.
-As an action server, if it receives the 'load map' command, it will scan the environment until it has saved the ids of 7 different markers. The node subscribes to the topic '/marker_publisher_mod/id' where the scanned ids are posted. The callback checks not only if the id is already saved in the list, but checks also for the validity of the scanned id by calling the service 'room_info'. In order to load the map, the camera will move in two different configurations untile all the ids are scanned, then those are sent to the ontology interface node to actually load the map.
+As an action server, if it receives the 'load map' command, it will scan the environment until it has saved the ids of 7 different markers (actually the number of markers it has to search for can be passed as parameter). The node subscribes to the topic '/marker_publisher_mod/id' where the scanned ids are posted. The callback checks not only if the id is already saved in the list, but checks also for the validity of the scanned id by calling the service 'room_info'. In order to load the map, the camera will move in two different configurations untill all the ids are scanned, then those are sent to the ontology interface node to actually load the map.
 
 Actions:
 - ScannerAction, server
