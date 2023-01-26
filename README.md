@@ -250,10 +250,8 @@ This software requires the following ROS parameters:
 - `ontology_reasoner`, default "PELLET"
 - `urgency_threshold`, time after last visit which makes the location urgent, default 7
 - `charging_station_in`, recharging room, default "E"
-- `scanning_time`, time before loading the map, default 5
-- `planning_time`, time for planning a via point, default between 0.1 and 0.2
+- `n_ids`, number of markers the robot has to scan
 - `motion_time`, time for reaching a via point, default between 0.1 and 0.2
-- `monitoring_time`, busy waiting duration, default 10
 - `recharging_time`, busy waiting duration, default 10
 - `battery_time`, battery status toggle time, default between 15 and 40
 
@@ -293,7 +291,7 @@ Now, the robot, which has completed a full recharge, continues monitoring the lo
 - Since the rooms are chosen randomly among the eligibles, could happen that an urgent room is not visited for a relatively long time
 ### Possible technical improvements
 - For now, actions do not return any feedback during their execution. It can be useful to implement them.
-- Rooms are chosen randomnly from the urgent list. It would be better to chose the one not visited for the longest time. This would require to store that information for every room or, equivalently, to query the ontology, each time, for all the rooms' *visitedAt* value.
+- Rooms are chosen randomly from the urgent list. It would be better to chose the one not visited for the longest time. This would require to store that information for every room or, equivalently, to query the ontology, each time, for all the rooms' *visitedAt* value.
 
 
 ## Contact me
