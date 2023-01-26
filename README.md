@@ -13,10 +13,7 @@ Author: *Samuele Depalo*
 
 ## Introduction
 
-This repository contains ROS-based software for controlling a robot. 
-The main components are
-- a state-machine that represent the robot behaviour according to the environment and to some stimulus
-- ???
+This repository contains ROS-based software for controlling a proposed robot.
 
 ### Scenario
 
@@ -195,16 +192,18 @@ It provides the info about the locations according to the marker id
 Services:
 - /room_info, server
 
-## The custom robot
+## The robot
 The developed robot is a mobile robot with a 3-dof arm embedded with a camera:
-![robot](https://user-images.githubusercontent.com/28822110/214936786-10bcc383-1363-439c-ad9f-8712aa319e7c.png)
-The robot has two actuated wheels (+1 castor wheel), a laser sensor (used for navigation), a camera (used for environment scansion)
+![robot](https://user-images.githubusercontent.com/28822110/214936786-10bcc383-1363-439c-ad9f-8712aa319e7c.png)  
+The robot has two actuated wheels (+1 castor wheel), a laser sensor (used for navigation) and a camera (used for environment scansion). The arm was necessary to read the markers on the wall since the camera was not able to recognize them.  
+The robot and its components are described in 'robot2.xacro' and 'robot2.gazebo'.  
+It is embedded with three revolute joints, one of which continuous (the one between the base and the arm). Their motors are controlled from the scanner node through the 'joint_position_controller/command' topics. The position controllers are spawned in the assignment.launch and configured in 'config/motors_config.yaml'.
 
 ## Launching the Software
 
 ### Dependencies
 
-In order to install and run this application, first you should install the *aRMOR* and the *SMACH* package (you can follow the procedure described [here](https://unigeit.sharepoint.com/sites/106723-ExperimentalRoboticsLaboratory/Class%20Materials/Forms/AllItems.aspx?id=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials%2FROS%2Dinstallation%2Emd&parent=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials)). Mind that the software also exploits [roslaunch](http://wiki.ros.org/roslaunch), [rospy](http://wiki.ros.org/rospy), [roscpp](http://wiki.ros.org/roscpp), [actionlib](http://wiki.ros.org/actionlib/DetailedDescription), [aruco_ros](https://github.com/CarmineD8/aruco_ros/tree/main/aruco_ros) and [ros_control](http://wiki.ros.org/ros_control).
+In order to install and run this application, first you should install the *aRMOR* and the *SMACH* package (you can follow the procedure described [here](https://unigeit.sharepoint.com/sites/106723-ExperimentalRoboticsLaboratory/Class%20Materials/Forms/AllItems.aspx?id=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials%2FROS%2Dinstallation%2Emd&parent=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials)). Mind that the software also exploits [roslaunch](http://wiki.ros.org/roslaunch), [rospy](http://wiki.ros.org/rospy), [roscpp](http://wiki.ros.org/roscpp), [actionlib](http://wiki.ros.org/actionlib/DetailedDescription), [aruco_ros](https://github.com/CarmineD8/aruco_ros/tree/main/aruco_ros), [ros_control](http://wiki.ros.org/ros_control), [gmapping](https://github.com/CarmineD8/SLAM_packages/tree/main/slam_gmapping/gmapping) and [move_base](http://wiki.ros.org/move_base).
 
 ### Installation
 
