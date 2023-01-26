@@ -1,32 +1,36 @@
-# ExpRobLab_SecondAssignment
+# ExpRobLab_Assignment
 
 **A ROS-based exercise for the Experimental Robotics Laboratory course held at the University of Genoa.**  
 Author: *Samuele Depalo*  
 [Code documentation](https://samueled98.github.io/assignment_1/)
 
 ---
+> :memo: **Assignment 2:** 
+> 
+> In this second assignment of the Experimental Robotics Laboratory course, the architecture developed in the first assignment is integrated with a robotic simulation. 
+> 
+> The following ReadMe and the documentation have been integrated with all the difference from the original system
 
 ## Introduction
 
-This repository contains ROS-based software for controlling a robot. The main component is a state-machine that represent the robot behaviour according to the environment and to some stimulus.
+This repository contains ROS-based software for controlling a proposed robot.
 
 ### Scenario
 
-The considered mobile robot retrieves environment related information from an ontology and uses this data for moving across locations.
+The considered mobile robot retrieves environment related information from some aruco markers (7!!!) next to it when spawned. This data are used for  moving across locations.
 Here how the robot should behave:
-1. The robot should load a map before any other action
+1. The robot should scan the markers and load a map before any other action
 2. The robot should move between corridors
 3. If a room is not visited for a given time, the robot should visit it
-4. If the robot's battery is low on energy, the robot should stop the current action and go in a specific room for recharging.  
+4. If the robot's battery is low on energy, the robot should stop the current action and go in the first room for recharging.  
 
 ### Assumptions
-- The map is passed to the system as ontology stored in a .owl file
+- The map is built as an ontology stored in a .owl file
 - The maps follow the same scheme as the one given for the assignment (i.e. same ontology, different ABox)
-- The robot starts its motion with enough energy to load the map (so a *battery low* stimulus is ignored in that state). Otherwise the robot wouldn't be able to reach the recharge room since if it didn't load the information about the environment before the stimulus.
-- When low on battery, the robot is able to reach the recharging room even if this is not adjacent to the current location.
+- The robot starts its motion with enough energy to load the map (so a *battery low* stimulus is ignored in that state)
 - May happens the battery results full after a *battery low* signal comes. Why this, it's not part of the discusion (could be a battery level misreading,  poor/defective hardware,.. ).
 
-### Package List
+### Package List  UPDATEEEEEEEEEEEEEEEEEEEEEEEEEEEEE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 The repository contains the following resources:
 - action --> actions' structure
@@ -55,7 +59,6 @@ The repository contains the following resources:
 - images --> images shown in this ReadMe
 
 There are also files related to the ROS architecture (*CMakeLists.txt* and *package.xml*) and to the code documentation (*Makefile*, *conf.py* and *index.rst*).
-
 
 
 ## Software architecture
@@ -110,9 +113,9 @@ It implements the robot's behaviour.
 Four different kind of state's implementation are described in as many classes: *Mapping()*, *Move()*, *Monitor()* and *Recharge()*.    
 The execute of a Mapping() state simply send a goal to the Scanner node for loading the map and waits for it to end.  
 Move(), depending on the "type" argument, either asks to the Ontology Interface node for the next room to visit or it asks for the recharging room.  
-After, it sends a goal to the planner, first, and then to the controller for planning and control the motion to the target. Finally, it asks the Ontology Interface to update the robot position in the ontology.   
+After, it sends a goal to move_base for planning and control the motion to the target. Finally, it asks the Ontology Interface to update the robot position in the ontology.   
 Mind that the *wait_for_result()* instructions placed after the while loops are there just to syncronize the code with the action result. If it weren't for those, as soon as the *get_result()* instruction was called, an error would raise because the result is not available yet.  
-In Monitor() and Recharge() there's only a busy waiting, to simulate the time the robot should spend performing those actions.  
+In Recharge() there's only a busy waiting, to simulate the time the robot should spend performing that action.
 The main code consist in setting the node, configuring the state machine as already described, starting the server for visualization, initializing the action clients, waiting for the actions servers and finally executing the state machine.  
 Important to mention four callbacks:
 - **monitor_cb()** is called when a new message is published in /battery_status and terminates its execution only if the new battery status is different from the old one. This in order to ignore consecutive messages with the same information (if the robot already knows the battery is low and it's going to recharge, it should not interrupt this action if a new *battery low* message arrives)
@@ -131,8 +134,8 @@ Actions:
 
 This node provides an interface for all the other components to the [armor](https://github.com/EmaroLab/armor) server, allowing them to query and manipulate an ontology in a easier and modular way. By doing so, the other components (e.g. planner, controller) have no commands related to the armor server connection.  
 The node presents a [SimpleActionServer](http://wiki.ros.org/actionlib_tutorials/Tutorials/SimpleActionServer%28ExecuteCallbackMethod%29) which possible goals are:
-- *load_map*: load the ontology specified in the rosparams server, save lists of names of the main locations and also the name of the robot, update the urgency threshold with the one given as parameter, call the reasoner and update the robot's *now* timestamp.
-- *next_room*: find the next location the robot should visit following a predetermined algorithm. It retrieves the urgent rooms as the elements that are both in the urgent locations list and in the rooms list, then takes one of those which are also reachables. If there are none, it choose a reachable corridor. If no corridors nor urgent rooms are avaiable, it takes randomly a reachable location.
+- *load_map*: load the ontology specified in the rosparams server, updates it with informations retrieved from the Aruco markers, save lists of names of the main locations and also the name of the robot, update the urgency threshold with the one given as parameter, call the reasoner and update the robot's *now* timestamp.
+- *next_room*: find the next location the robot should visit following a predetermined algorithm. It retrieves the urgent rooms as the elements that are both in the urgent locations list and in the rooms list, then takes one of those which are also reachables. If there are none, it choose a reachable corridor. If no corridors nor urgent rooms are avaiable, it takes randomly a reachable location. It returns the name of the location along with its coordinates.
 - *move_to*: once the robot reaches a new location, the node update both its position in the ontology and the *visitedAt* value for the new location.
 - *recharge_room*: return the location for the recharging of the robot.  
 
@@ -144,6 +147,7 @@ Mind that all the calls to the armor server are made with the [armor_py_api](htt
 
 Services:
 - /armor_interface_srv (waits for it to be ready)
+- /room_info, client
 
 Actions:
 - OICommandAction, server
@@ -153,7 +157,7 @@ Actions:
 #### The Robot State node  
 Similar to the one implemented in [arch_skeleton](https://github.com/buoncubi/arch_skeleton), this node implements two services (set_pose and get_pose) and a publisher (battery_status).
 
-The services allow setting and getting the current robot position, which is shared between the planner and the controller.
+The services allow setting and getting the current robot position.
 
 The battery_status message is published when the batter changes state. We consider two possible states: low battery (True is published) and recharged (False is published).
 The battery_time parameter is used to delay the published messages.
@@ -165,39 +169,45 @@ Services:
 - GetPose, server
 - SetPose, server
 
-#### The Scanner node
-This node simulates a scanner which should retrieve information about the environment (e.g. from a QR code).
-For now it just send a goal to the Ontology Interface node for loading the ontology passed as parameter.  
+#### The Scanner node     UPDATEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+This node controls the camera arm in order to scan the enviroment for the Aruco markers at first, and then scan the locations once the robot reaches them.
+As an action server, if it receives the 'load map' command, it will scan the environment until it has saved the ids of 7 different markers. The node subscribes to the topic '/marker_publisher_mod/id' where the scanned ids are posted. The callback checks not only if the id is already saved in the list, but checks also for the validity of the scanned id by calling the service 'room_info'. In order to load the map, the camera will move in two different configurations untile all the ids are scanned, then those are sent to the ontology interface node to actually load the map.
 
 Actions:
 - ScannerAction, server
 - OICommandAction, client
 
-#### The Planner node  
-A simplification of the one implemented in [arch_skeleton](https://github.com/buoncubi/arch_skeleton), the behaviour remains pretty much the same, for semplicity the feedbacks were removed.
+Services:
+- /room_info, client
 
-Actions:
-- PlanAction, server
+#### The Aruco Marker Publisher node 
+This node is an edited version of the one in [aruco_ros](https://github.com/CarmineD8/aruco_ros/tree/main/aruco_ros). This one, instead of printing a marker id once detected, send it on the topic 'aruco_marker_publisher/id'
+
+Messages:
+- aruco_marker_publisher/id, publisher
+
+#### The Marker Server node
+It provides the info about the locations according to the marker id
 
 Services:
-- GetPose, client
+- /room_info, server
 
+### Mapping and Navigation
+The robot makes use of the gmapping package to map the environment (using the hokuyo laser).  
+For the navigation, the move_base package is used with nafvn as the global planner and dwa as the local planner. All the parameters are in the params/ folder.
 
-#### The Controller node  
-A simplification of the one implemented in [arch_skeleton](https://github.com/buoncubi/arch_skeleton), the behaviour remains pretty much the same, for semplicity the feedbacks were removed.
-
-Actions:
-- ControlAction, server
-
-Services:
-- GetPose, client
-- SetPose, client
+## The robot
+The developed robot is a mobile robot with a 3-dof arm embedded with a camera:
+![robot](https://user-images.githubusercontent.com/28822110/214936786-10bcc383-1363-439c-ad9f-8712aa319e7c.png)  
+The robot has two actuated wheels (+1 castor wheel), a laser sensor (used for navigation) and a camera (used for environment scansion). The arm was necessary to read the markers on the wall since the camera was not able to recognize them.  
+The robot and its components are described in 'robot2.xacro' and 'robot2.gazebo'.  
+It is embedded with three revolute joints, one of which continuous (the one between the base and the arm). Their motors are controlled from the scanner node through the 'joint_position_controller/command' topics. The position controllers are spawned in the assignment.launch and configured in 'config/motors_config.yaml'.
 
 ## Launching the Software
 
 ### Dependencies
 
-In order to install and run this application, first you should install the *aRMOR* and the *SMACH* package (you can follow the procedure described [here](https://unigeit.sharepoint.com/sites/106723-ExperimentalRoboticsLaboratory/Class%20Materials/Forms/AllItems.aspx?id=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials%2FROS%2Dinstallation%2Emd&parent=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials)). Mind that the software also exploits [roslaunch](http://wiki.ros.org/roslaunch), [rospy](http://wiki.ros.org/rospy) and [actionlib](http://wiki.ros.org/actionlib/DetailedDescription).
+In order to install and run this application, first you should install the *aRMOR* and the *SMACH* package (you can follow the procedure described [here](https://unigeit.sharepoint.com/sites/106723-ExperimentalRoboticsLaboratory/Class%20Materials/Forms/AllItems.aspx?id=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials%2FROS%2Dinstallation%2Emd&parent=%2Fsites%2F106723%2DExperimentalRoboticsLaboratory%2FClass%20Materials)). Mind that the software also exploits [roslaunch](http://wiki.ros.org/roslaunch), [rospy](http://wiki.ros.org/rospy), [roscpp](http://wiki.ros.org/roscpp), [actionlib](http://wiki.ros.org/actionlib/DetailedDescription), [aruco_ros](https://github.com/CarmineD8/aruco_ros/tree/main/aruco_ros), [ros_control](http://wiki.ros.org/ros_control), [gmapping](https://github.com/CarmineD8/SLAM_packages/tree/main/slam_gmapping/gmapping) and [move_base](http://wiki.ros.org/move_base).
 
 ### Installation
 
@@ -208,11 +218,13 @@ Follow these steps to install:
 
 ### Launchers
 
-For running the software call the launcher with `roslaunch assignment_1 system.launch`.  
+For running the software call:
+1) `roslaunch assignment_1 assignment.launch`.  
+2) `roslaunch assignment_1 system.launch`.  
 This will set the parameters in the server, run the aRMOR server, the state machine and all the other necessary components later described.  
-The showed outputs are the state machine node's and the smach viewer's ones. Those are enough to show the robot behaviour
+The showed outputs are the state machine node's and the smach viewer's ones. It also opens gazebo and rviz.
 
-For further information you can call the `roslaunch assignment_1 debug.launch` which shows to screen all the components' output.
+For further information you can call the `roslaunch assignment_1 debug.launch` which shows to screen all the components' output (instead of system.launch).
 
 ### ROS Parameters  
 This software requires the following ROS parameters:
@@ -255,7 +267,7 @@ Now, the robot, which has completed a full recharge, continues monitoring the lo
 ### System's features
 - Independent from the ontology constitution: the system do not assume the names of the locations nor the robot one. After loading an ontology it just retrieves the necessary elements' names. This allow also to give the recharging room as parameter.
 - Highly parametrized: many aspect of the given scenario can be customized (giving any ABox for the used ontology, changing the execution times, recharging rooms,.. )
-- The scanner node is ready to implement the means for scanning the data (e.g. a qr code) representing the environment
+- The scanner node do not know a-priori the markers id but cross-cheks their validity
 - The recharge state can be preempted if the battery is high
 - Modular: it's easy to change the robot behaviour in every aspect. From the motion task to the monitoring of the environment, from how it retrieves the maps to how it plans and controls the motion.
 - Able to withstand a high rate of stimulus
@@ -267,9 +279,6 @@ Now, the robot, which has completed a full recharge, continues monitoring the lo
 ### Possible technical improvements
 - For now, actions do not return any feedback during their execution. It can be useful to implement them.
 - Rooms are chosen randomnly from the urgent list. It would be better to chose the one not visited for the longest time. This would require to store that information for every room or, equivalently, to query the ontology, each time, for all the rooms' *visitedAt* value.
-- Once done the previous, it would be necessary to give the robot the ability of planning path for reaching also locations not adjacent (maybe by following the reachable locations to build a tree and then chosing the path that leads to the target with the least steps)
-- The monitor and the recharge phase should call an external node for their execution, meanwhile the state machine should just check if the state is preempted and act accordingly.
-- Upon implementing an actual planner and controller, there will be the need of mapping each location to a point that will be passed to the planner as target.
 
 
 ## Contact me

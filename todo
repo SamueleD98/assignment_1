@@ -1,8 +1,0 @@
-try making a prismatic joint
-
-roslaunch assignment_1 assignment.launch
-rostopic echo /marker_publisher_mod/id
-roslaunch assignment_1 debug.launch
-
-
-rostopic pub /robot_camera_laser/joint_camera_position_controller/command std_msgs/Float64 "data: 1.0" 
