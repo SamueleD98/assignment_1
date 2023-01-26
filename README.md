@@ -195,6 +195,11 @@ It provides the info about the locations according to the marker id
 Services:
 - /room_info, server
 
+## The custom robot
+The developed robot is a mobile robot with a 3-dof arm embedded with a camera:
+![robot](https://user-images.githubusercontent.com/28822110/214936786-10bcc383-1363-439c-ad9f-8712aa319e7c.png)
+The robot has two actuated wheels (+1 castor wheel), a laser sensor (used for navigation), a camera (used for environment scansion)
+
 ## Launching the Software
 
 ### Dependencies
