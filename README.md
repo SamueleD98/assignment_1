@@ -9,8 +9,14 @@ Author: *Samuele Depalo*
 > 
 > In this second assignment of the Experimental Robotics Laboratory course, the architecture developed in the first assignment is integrated with a robotic simulation. 
 > 
-> The following ReadMe and the documentation have been integrated with all the difference from the original system
-> rosrun map_server map_saver
+> The following ReadMe and the documentation have been integrated with all the difference from the original system.
+> Here some new features:
+> - The spawned robot is able to recognize some Aruco markers and move autonomously while mapping the environment
+> - The popolated ontology can be saved (according to a parameter)
+> - The location to reach is now chosen according to the last visited time or according to the number of urgent locations the robot can reach from there (if it is a corridor)
+> - The planner and controller nodes now actually implement a planner and a controller by relying on the move_base package
+
+rosrun map_server map_saver
 
 ## Introduction
 
