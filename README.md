@@ -10,6 +10,7 @@ Author: *Samuele Depalo*
 > In this second assignment of the Experimental Robotics Laboratory course, the architecture developed in the first assignment is integrated with a robotic simulation. 
 > 
 > The following ReadMe and the documentation have been integrated with all the difference from the original system
+> rosrun map_server map_saver
 
 ## Introduction
 
