@@ -220,7 +220,7 @@ For the navigation, the move_base package is used with nafvn as the global plann
 
 ## The robot
 The developed robot is a mobile robot with a 3-dof arm embedded with a camera:
-![robot](https://user-images.githubusercontent.com/28822110/214936786-10bcc383-1363-439c-ad9f-8712aa319e7c.png)  
+![robot](https://user-images.githubusercontent.com/28822110/215561218-3b7105c5-8783-452b-848b-bfd737d5f820.png)
 The robot has two actuated wheels (+1 castor wheel), a laser sensor (used for navigation) and a camera (used for environment scansion). The arm was necessary to read the markers on the wall since the camera was not able to recognize them.  
 The robot and its components are described in 'robot2.xacro' and 'robot2.gazebo'.  
 It is embedded with three revolute joints, one of which continuous (the one between the base and the arm). Their motors are controlled from the scanner node through the 'joint_position_controller/command' topics. The position controllers are spawned in the assignment.launch and configured in 'config/motors_config.yaml'.
