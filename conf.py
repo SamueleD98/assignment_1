@@ -20,8 +20,8 @@ sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'First assignment ExpRobLab'
-copyright = '2022, Samuele Depalo'
+project = 'Assignment ExpRobLab'
+copyright = '2023, Samuele Depalo'
 author = 'Samuele Depalo'
 
 # The short X.Y version
@@ -130,7 +130,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'FirstassignmentExpRobLab.tex', 'First assignment ExpRobLab Documentation',
+    (master_doc, 'FirstassignmentExpRobLab.tex', 'Assignment ExpRobLab Documentation',
      'Samuele Depalo', 'manual'),
 ]
 
@@ -140,7 +140,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'firstassignmentexproblab', 'First assignment ExpRobLab Documentation',
+    (master_doc, 'firstassignmentexproblab', 'Assignment ExpRobLab Documentation',
      [author], 1)
 ]
 
@@ -151,7 +151,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'FirstassignmentExpRobLab', 'First assignment ExpRobLab Documentation',
+    (master_doc, 'FirstassignmentExpRobLab', 'Assignment ExpRobLab Documentation',
      author, 'FirstassignmentExpRobLab', 'One line description of project.',
      'Miscellaneous'),
 ]

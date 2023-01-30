@@ -2,8 +2,11 @@
 
 ### Action Service Goal
 
-# The plan as a set of points to reach.
-Point[] via_points
+# The point to reach
+Point target
+
+# The plan as a path
+nav_msgs/Path plan
 
 ---
 
@@ -15,6 +18,3 @@ Point reached_point
 ---
 
 ### Action Server Feedback
-
-# The last `via_point` reached so far.
-Point reached_point

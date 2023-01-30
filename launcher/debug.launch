@@ -1,20 +1,22 @@
 <launch>
 
-    <!-- <param name="publish_frequency" type="double" value="10.0" /> -->
-
-    <param name="O_path" type="str" value="/home/samuele/experimental_lab__ws/src/assignment_1/ontology/map1.owl" />
+    <param name="O_path" type="str" value="$(find assignment_1)/ontology/map1.owl" />
     <param name="O_IRI" type="str" value="http://bnc/exp-rob-lab/2022-23" />
+
+    <!-- if you want to save the ontology, please change the O_save_path with the desired path -->
+    <param name="save_ontology" type="bool" value="False" />
+    <param name="O_save_path" type="str" value="/home/samuele/experimental_lab__ws/src/assignment_1/ontology/mapFull.owl" />
 
     <param name="armor_client_id" type="str" value="user" />
     <param name="armor_reference_name" type="str" value="ref" />
 
     <param name="ontology_reasoner" type="str" value="PELLET" />
-    <param name="urgency_threshold" type="int" value="10" />
+    <param name="urgency_threshold" type="int" value="300" />
 
     <param name="charging_station_in" type="str" value="E" />
 
     <param name="n_ids" type="int" value="7" />
-    
+
     <rosparam param="planning_time"> [0, 0] </rosparam>
     <rosparam param="motion_time"> [0, 0] </rosparam>
 
@@ -49,14 +51,16 @@
     <node pkg = "assignment_1"
           type = "planner.py"
           name = "planner"
+          output="screen"
+          launch-prefix="gnome-terminal --command"
 
            />
 
    <node pkg = "assignment_1"
          type = "controller.py"
          name = "controller"
-
-
+         output="screen"
+         launch-prefix="gnome-terminal --command"
           />
 
     <node pkg = "assignment_1"

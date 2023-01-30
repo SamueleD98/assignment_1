@@ -5,10 +5,10 @@ Author: *Samuele Depalo*
 [Code documentation](https://samueled98.github.io/assignment_1/)
 
 ---
-> :memo: **Assignment 2:** 
-> 
-> In this second assignment of the Experimental Robotics Laboratory course, the architecture developed in the first assignment is integrated with a robotic simulation. 
-> 
+> :memo: **Assignment 2:**
+>
+> In this second assignment of the Experimental Robotics Laboratory course, the architecture developed in the first assignment is integrated with a robotic simulation.
+>
 > The following ReadMe and the documentation have been integrated with all the difference from the original system
 
 ## Introduction
@@ -37,7 +37,7 @@ The repository contains the following resources:
   - OICommand.action: It defines the goal and results concerning the ontology interface
   - Scanner.action: It defines the goal and result concerning the map scanning/loading
 - config
-  - motors_config.yaml: motors configuration 
+  - motors_config.yaml: motors configuration
   - sim2.rviz:  rviz configuration
 - launcher --> ROS launchers
   - armor.launch: just run the armor server
@@ -98,7 +98,7 @@ This state machine has the particularity of being hierarchical: both the Monitor
 Here a description of the inner state machine EXECUTE:
 1. **Move** state: it retrieves the next target location for the robot and gives it as a goal to move_base, in order to reach that location.
 2. **Monitor** state: scan the environment by turning the camera.
-3. **Recharge** state: in this implementation this state actually consist in busy waiting for a given time, simulating the recharging. 
+3. **Recharge** state: in this implementation this state actually consist in busy waiting for a given time, simulating the recharging.
 
 The last inner state is the **Check Battery status** state: this is a [Monitor state](http://wiki.ros.org/smach/Tutorials/MonitorState), a particular kind of states that *Smach* allows to use. It works in [concurrence](http://wiki.ros.org/smach/Tutorials/Concurrent%20States) with the EXECUTE state machine, waiting for a message to be published on a specific topic: '/battery_status'. Once something is published a callback is called to decide if due to this change in the battery level, the current state machine should be preempted for the other main state.  
 
@@ -195,7 +195,7 @@ Actions:
 Services:
 - /room_info, client
 
-#### The Aruco Marker Publisher node 
+#### The Aruco Marker Publisher node
 This node is an edited version of the one in [aruco_ros](https://github.com/CarmineD8/aruco_ros/tree/main/aruco_ros). This one, instead of printing a marker id once detected, send it on the topic 'aruco_marker_publisher/id'
 
 Messages:
@@ -209,7 +209,7 @@ Services:
 
 ### Mapping and Navigation
 The robot makes use of the gmapping package to map the environment (using the hokuyo laser).  
-For the navigation, the move_base package is used with nafvn as the global planner and dwa as the local planner. All the parameters are in the params/ folder.
+For the navigation, the move_base package is used with 'nafvn' as the global planner and 'base_local_planner' as the local planner. All the parameters are in the params/ folder.
 
 ## The robot
 The developed robot is a mobile robot with a 3-dof arm embedded with a camera:

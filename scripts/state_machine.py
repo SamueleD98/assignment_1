@@ -28,12 +28,10 @@ from smach_ros import MonitorState, IntrospectionServer
 import time
 import random
 import actionlib
-from assignment_1.msg import OICommandGoal,ScannerAction, ScannerGoal, PlanAction, PlanGoal, ControlAction, ControlGoal, Point#, PlanResult ControlResult
+from assignment_1.msg import OICommandAction, OICommandGoal,ScannerAction, ScannerGoal, PlanAction, PlanGoal, ControlAction, ControlGoal, Point#, PlanResult ControlResult
 from assignment_1.srv import *
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-#import assignment_1.msg
-
-#import assignment_1
+from actionlib_msgs.msg import GoalStatus
 from std_msgs.msg import String, Bool
 
 battery_is_low = False
@@ -48,14 +46,14 @@ class Mapping(State):
     def execute(self, userdata):
         """
         Mapping state callback
-        Sends a goal "load_map" to the scanner node and wait for it to end
+        Sends a goal "load_map" to the scanner node and waits for it to end
         """
         print(' ')
         rospy.loginfo('Executing state MAPPING')
 
         #time.sleep(self.scanning_time)
 
-        goal = assignment_1.msg.ScannerGoal()
+        goal = ScannerGoal()
         goal.command = 'load_map'
         scanner_client.send_goal(goal)
         scanner_client.wait_for_result()
@@ -67,9 +65,8 @@ class Move(State):
     Class implementing the Move state of the state machine
     Manages the motion to a location:
 
-    - asks the Ontology Interface for the target.
-    - asks the Planner for a plan.
-    - asks the Controller to control the motion
+    - asks the Ontology Interface for the target
+    - ask move_base to plan and control the motion to the target
     - asks the Ontology Interface to set the new robot position in the ontology
 
     """
@@ -77,13 +74,15 @@ class Move(State):
         State.__init__(self, outcomes=['done','preempted'], )
         self._type = type   # distinguish a recharge move from a monitor move
         self.set_pose = rospy.ServiceProxy('/set_pose', SetPose)
-        self.move_base_client = actionlib.SimpleActionClient('move_base',MoveBaseAction)
-        self.move_base_client.wait_for_server()
 
 
     def execute(self, userdata):
-        print(' ')
+        # move_base_client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+        # if not move_base_client.wait_for_server(rospy.Duration(5)):
+        #     rospy.logerr('UNABLE TO CONNECT TO MOVE_BASE SERVER')
 
+        print(' ')
+        #print('trying to catch the error')
         # get the next location from the ontolgy interface
         get_target = OICommandGoal()
         if self._type == 'recharge':
@@ -105,23 +104,48 @@ class Move(State):
         target = result.res
         pos_x = float(result.x)
         pos_y = float(result.y)
-        rospy.loginfo('Going to '+ target)
+        rospy.loginfo('Going to '+target+' ['+str(pos_x)+', '+str(pos_y)+']')
 
-        #MOVE_BASE
-        goal = MoveBaseGoal()
-        goal.target_pose.header.frame_id = "map"
-        goal.target_pose.header.stamp = rospy.Time.now()
-        goal.target_pose.pose.position.x = pos_x
-        goal.target_pose.pose.position.x = pos_y
-        goal.target_pose.pose.orientation.w= 1.0;
-
-        self.move_base_client.send_goal(goal)
-        while(self.move_base_client.get_state() != 3):
+        get_plan = PlanGoal()
+        get_plan.target = Point(x=pos_x, y=pos_y)
+        planner_client.send_goal(get_plan)
+        while(planner_client.get_state() != 3):
             if self.preempt_requested():
-                self.move_base_client.cancel_all_goals()
+                planner_client.cancel_all_goals()
                 self.service_preempt()
                 return 'preempted'
-        self.move_base_client.wait_for_result()
+        planner_client.wait_for_result()
+        plan = planner_client.get_result()
+
+        #CONTROLLER
+        goal = ControlGoal()
+        goal.target = get_plan.target
+        goal.plan = plan.plan
+        controller_client.send_goal(goal)
+        while(controller_client.get_state() != 3):
+            if self.preempt_requested():
+                controller_client.cancel_all_goals()
+                self.service_preempt()
+                return 'preempted'
+        controller_client.wait_for_result()
+
+        # #MOVE_BASE
+        # goal = MoveBaseGoal()
+        # goal.target_pose.header.frame_id = "map"
+        # goal.target_pose.header.stamp = rospy.Time.now()
+        # goal.target_pose.pose.position.x = pos_x
+        # goal.target_pose.pose.position.y = pos_y
+        # goal.target_pose.pose.orientation.w= 1.0;
+        # #rospy.loginfo('x = '+ str(pos_x))
+        # #rospy.loginfo('y = '+ str(pos_y))
+        #
+        # move_base_client.send_goal(goal)
+        # while(move_base_client.get_state() != 3):
+        #     if self.preempt_requested():
+        #         move_base_client.cancel_all_goals()
+        #         self.service_preempt()
+        #         return 'preempted'
+        # move_base_client.wait_for_result()
 
         # update the robot position in the ontology
         set_new_room = OICommandGoal()
@@ -138,7 +162,70 @@ class Move(State):
         OI_client.wait_for_result()
 
         # update the pose in robot_state
-        point = Point()
+        point = Point()    # print('---')
+        # print(GoalStatus.SUCCEEDED)
+        # print(GoalStatus.PENDING)
+        # print(GoalStatus.ACTIVE)
+        # print(GoalStatus.LOST)
+        # print('---')
+
+        # count1 = 0
+        # count2 = 0
+        #
+        # #move_base_client.send_goal(goal)
+        # print(' ')
+        # print('starting')
+        # try:
+        #     print(state)
+        # except Exception as e:
+        #     pass
+        # state = move_base_client.get_state()
+        # print(state)
+        # move_base_client.cancel_all_goals()
+        # state = move_base_client.get_state()
+        # print(state)
+        # while(state != GoalStatus.SUCCEEDED):
+        #     count1 = count1+1
+        #     if (state != GoalStatus.LOST):
+        #         move_base_client.cancel_all_goals()
+        #     move_base_client.send_goal(goal)
+        #     rospy.sleep(0.1)
+        #     state = move_base_client.get_state()
+        #     while(state == GoalStatus.PENDING or state == GoalStatus.ACTIVE):
+        #         count2 = count2+1
+        #         if self.preempt_requested():
+        #             move_base_client.cancel_all_goals()
+        #             self.service_preempt()
+        #             return 'preempted'
+        #         state = move_base_client.get_state()
+        # move_base_client.wait_for_result()
+        # print('---')
+        # print(count1)
+        # print(count2)
+        # print('---')
+
+
+        #move_base_client.wait_for_result()
+
+        # reached = False
+        # while(reached == False):
+        #     if (move_base_client.get_state() != GoalStatus.LOST):
+        #         move_base_client.cancel_all_goals()
+        #     move_base_client.send_goal(goal)
+        #     state = move_base_client.get_state()
+        #     # it has to be pending or active, otherwise re-do it
+        #     while(state == GoalStatus.PENDING or state == GoalStatus.ACTIVE):
+        #         if self.preempt_requested():
+        #             move_base_client.cancel_all_goals()
+        #             self.service_preempt()
+        #             return 'preempted'
+        #         state_old = state
+        #         state = move_base_client.get_state()
+        #         if(state != state_old):
+        #             print(state)
+        #     #move_base_client.wait_for_result()
+        #     if (state == GoalStatus.SUCCEEDED):
+        #         reached = True
         point.x = pos_x
         point.y =pos_y
         self.set_pose(point)
@@ -160,12 +247,13 @@ class Monitor(State):
     def execute(self, userdata):
         rospy.loginfo('Monitoring the environment')
 
-        # this should be replaced with the actual code for exploring the environment
+        # if (scanner_client.get_state() != GoalStatus.LOST):
+        #     scanner_client.cancel_all_goals()
+
+
         goal = assignment_1.msg.ScannerGoal()
         goal.command = 'scan_room'
         scanner_client.send_goal(goal)
-
-        rospy.loginfo('here')
 
         while(scanner_client.get_state() != 3):
             if self.preempt_requested():
@@ -186,7 +274,6 @@ class Recharge(State):
         self.recharging_time = rospy.get_param("recharging_time", 10)
 
     def execute(self, userdata):
-        # print(' ')
         rospy.loginfo('Recharging')
 
         # this should be replaced with the actual code for recharging the robot
@@ -202,7 +289,7 @@ class Recharge(State):
 # gets called when ANY child state terminates
 def child_term_cb(outcome_map):
     """
-    Function called when an inner state terminate
+    Function called when an inner state terminates
     It just terminates all the inner states
     """
     # terminate ALL the child states
@@ -256,7 +343,7 @@ def main():
     """
     This function initializes the ROS node, the state machine and the clients for the :mod:`scanner`, :mod:`planner`, :mod:`controller` and :mod:`ontology_interface` modules.
     """
-    global OI_client, scanner_client, planner_client, controller_client
+    global OI_client, scanner_client, planner_client, controller_client#, move_base_client
     rospy.init_node('state_machine')
 
     # Create a SMACH state machine
@@ -322,19 +409,22 @@ def main():
 
 
     OI_client = actionlib.SimpleActionClient('OntologyInterface',
-                                             assignment_1.msg.OICommandAction)
+                                             OICommandAction)
 
     scanner_client = actionlib.SimpleActionClient('action_scanner',
-                                             assignment_1.msg.ScannerAction)
+                                             ScannerAction)
+
+    #move_base_client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
 
     planner_client = actionlib.SimpleActionClient('action_planner',
-                                             assignment_1.msg.PlanAction)
+                                             PlanAction)
 
     controller_client = actionlib.SimpleActionClient('action_controller',
-                                             assignment_1.msg.ControlAction)
+                                             ControlAction)
 
     OI_client.wait_for_server()
     scanner_client.wait_for_server()
+    #move_base_client.wait_for_server()
     planner_client.wait_for_server()
     controller_client.wait_for_server()
 

@@ -1,0 +1,63 @@
+<launch>
+
+  <include file="$(find assignment_1)/launcher/simulation.launch"></include>
+
+  <!-- ROBOT  -->
+  <!-- Show in Rviz   -->
+  <param name="robot_description" command="$(find xacro)/xacro '$(find assignment_1)/urdf/rosbot.xacro'"/>
+  <!-- Start Rviz -->
+  <param name="use_gui" value="True"/>
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"/>
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find assignment_1)/config/rosbot.rviz" required="true" output="screen"/>
+  <!-- Spawn the robot -->
+  <node name="rosbot_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
+    args="-urdf -model robot1 -param robot_description -x -6.0 -y 11.0 -z 0.05 -Y 3.14"/>
+  <!-- Controllers -->
+  <rosparam file="$(find assignment_1)/config/motors_config.yaml" command="load"/>
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen" args="
+      joint_state_controller
+      joint1_position_controller
+      joint2_position_controller
+      joint_camera_position_controller
+      ">
+  </node>
+
+  <!-- Gmapping -->
+  <node pkg="gmapping" type="slam_gmapping" name='gmapping_node' output='log'>
+      <param name="base_frame" value="base_link"/>
+      <param name="odom_frame" value="odom"/>
+      <param name="delta" value="0.05"/>
+      <param name="xmin" value="-50.0"/>
+      <param name="ymin" value="-50.0"/>
+      <param name="xmax" value="50.0"/>
+      <param name="ymax" value="50.0"/>
+      <param name="maxUrange" value="5"/>
+      <param name="map_update_interval" value="5"/>
+      <param name="linearUpdate" value="0.05"/>
+      <param name="angularUpdate" value="0.05"/>
+      <param name="temporalUpdate" value="0.1"/>
+      <param name="particles" value="100"/>
+  </node>
+  <!-- Move Base -->
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+  <!--<param name="base_global_planner" value="carrot_planner/CarrotPlanner" />-->
+  <!--<param name="base_global_planner" value="global_planner/GlobalPlanner" />-->
+  <rosparam file="$(find assignment_1)/param/costmap_common_params.yaml" command="load" ns="global_costmap"/>
+  <rosparam file="$(find assignment_1)/param/costmap_common_params.yaml" command="load" ns="local_costmap"/>
+  <rosparam file="$(find assignment_1)/param/local_costmap_params.yaml" command="load"/>
+  <rosparam file="$(find assignment_1)/param/global_costmap_params.yaml" command="load"/>
+  <rosparam file="$(find assignment_1)/param/base_local_planner_params.yaml" command="load"/>
+  <rosparam file="$(find assignment_1)/param/move_base_params.yaml" command="load"/>
+  </node>
+
+  <!-- Start the Aruco publisher node-->
+  <node name="marker_publisher_mod" pkg="assignment_1" type="marker_publisher_mod"
+  output="log">
+  <remap from="/image" to="/camera1/image_raw"/>
+  </node>
+  <!-- Start the Aruco server node-->
+  <node name="marker_server" pkg="assignment_1" type="marker_server" />
+
+
+</launch>

@@ -1,10 +1,22 @@
 <?xml version="1.0"?>
 <launch>
 
-  <arg name="model" default="$(find assignment_1)/urdf/robot2.xacro" />
-  <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />
-
-  <node name="joint_state_publisher_gui" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" ></node>
-	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find assignment_1)/config/sim2.rviz" />
+  <param name="robot_description" command="$(find xacro)/xacro '$(find assignment_1)/urdf/rosbot.xacro'"/>
+  <!-- Start Rviz -->
+  <param name="use_gui" value="True"/>
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"/>
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find assignment_1)/config/rosbot.rviz" required="true" output="screen"/>
+  <!-- Spawn the robot -->
+  <node name="rosbot_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
+    args="-urdf -model robot1 -param robot_description -x -6.0 -y 11.0 -z 0.05 -Y 3.14"/>
+  <!-- Controllers -->
+  <rosparam file="$(find assignment_1)/config/motors_config.yaml" command="load"/>
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen" args="
+      joint_state_controller
+      joint1_position_controller
+      joint2_position_controller
+      joint_camera_position_controller
+      ">
+  </node>
 </launch>

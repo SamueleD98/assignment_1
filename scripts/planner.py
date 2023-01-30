@@ -7,8 +7,9 @@
 
 ROS node for implementing a planner.
 
-Being a simpler version, for the documentation please refer to `the original code <https://github.com/buoncubi/arch_skeleton>`_
+Being this a simpler version, for the documentation please refer to the `original code <https://github.com/buoncubi/arch_skeleton>`_
 
+NOTE: this is not used in latest version of the system (move_base used instead).
 
 """
 
@@ -21,58 +22,62 @@ import assignment_1
 import assignment_1.msg
 import random
 from assignment_1.srv import GetPose
-from assignment_1.msg import Point, PlanResult
-
-
+from assignment_1.msg import Point, PlanResult, PlanAction
+from geometry_msgs.msg import PoseStamped
+from nav_msgs.srv import GetPlan
 
 class PlannerAction(object):
     def __init__(self):
         self.planning_time = rospy.get_param("planning_time", [0.1, 0.2])
 
         self._as = SimpleActionServer('action_planner',
-                                      assignment_1.msg.PlanAction,
+                                      PlanAction,
                                       execute_cb=self.execute_callback,
                                       auto_start=False)
 
         self._as.start()
-        print('planner ok')
+        rospy.loginfo('planner ok')
 
     def execute_callback(self, goal):
-        start_point = self._get_pose_client()
-        target_point = goal.target
-        if start_point is None or target_point is None:
-            rospy.logerr('Cannot have `None` start point nor target_point. This service will be aborted!')
-            # Close service by returning an `ABORT` state to the client.
+        print(' ')
+        rospy.loginfo('Trying to make a plan')
+        start_position = self._get_pose_client()
+        target_position = goal.target
+
+        # print(start_position)
+        # print(target_position)
+
+        if start_position is None or target_position is None:
+            rospy.logerr('Cannot have `None` start point nor target point. This service will be aborted!')
             self._as.set_aborted()
             return
-        result = PlanResult()
-        result.via_points.append(start_point)
-        delay = random.uniform(self.planning_time[0], self.planning_time[1])
-        rospy.sleep(delay)
 
-        number_of_points = random.randint(1, 10)
+        start_pose = PoseStamped()
+        start_pose.header.frame_id = "map"
+        start_pose.header.stamp = rospy.Time.now()
+        start_pose.pose.position.x = start_position.x
+        start_pose.pose.position.y = start_position.y
+        start_pose.pose.orientation.w= 1.0;
 
-        for i in range(1, number_of_points):
-            # Check that the client did not cancel this service.
-            if self._as.is_preempt_requested():
-                rospy.loginfo('Server has been cancelled by the client!')
-                # Actually cancel this service.
-                self._as.set_preempted()
-                return
-            # Generate a new random point of the plan.
-            new_point = Point()
-            new_point.x = random.uniform(0, 100)
-            new_point.y = random.uniform(0, 100)
-            result.via_points.append(new_point)
-            if i < number_of_points - 1:
-                # Wait to simulate computation.
-                delay = random.uniform(self.planning_time[0], self.planning_time[1])
-                rospy.sleep(delay)
-            else:
-                # Append the target point to the plan as the last point.
-                result.via_points.append(target_point)
-        rospy.loginfo('Motion plan succeeded!')
-        self._as.set_succeeded(result)
+        target_pose = PoseStamped()
+        target_pose.header.frame_id = "map"
+        target_pose.header.stamp = rospy.Time.now()
+        target_pose.pose.position.x = target_position.x
+        target_pose.pose.position.y = target_position.y
+        target_pose.pose.orientation.w= 1.0;
+
+        rospy.wait_for_service('/move_base/make_plan')
+        try:
+            rospy.loginfo('...')
+            move_base_getPlan = rospy.ServiceProxy('/move_base/make_plan', GetPlan)
+            plan = move_base_getPlan(start=start_pose, goal=target_pose, tolerance=1.0)
+            #return resp1.sum
+        except rospy.ServiceException as e:
+            rospy.logerr("Unable to build plan")
+            self._as.set_aborted()
+
+        rospy.loginfo('New plan!')
+        self._as.set_succeeded(plan)
 
     #Retrieve the current robot pose by the `state/get_pose` server of the `robot-state` node.
     def _get_pose_client(self):
@@ -87,8 +92,6 @@ class PlannerAction(object):
             return pose
         except rospy.ServiceException as e:
             rospy.logerr(e)
-
-
 
 
 if __name__ == '__main__':

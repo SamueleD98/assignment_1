@@ -9,7 +9,6 @@ ROS node which keeps track of the robot pose and battery status.
 
 Being a simpler version, for the documentation please refer to `the original code <https://github.com/buoncubi/arch_skeleton>`_
 
-
 """
 
 import rospy
@@ -32,7 +31,7 @@ class RobotState:
         # Initialise battery level
         self._battery_low = False
 
-        print('robot_state')
+        rospy.loginfo('robot_state ok')
 
         # Initialise randomness
         self._random_battery_time = rospy.get_param("/battery_time", [15.0, 40.0])

@@ -1,46 +1,46 @@
 <launch>
 
-    <!-- <param name="publish_frequency" type="double" value="10.0" /> -->
+  <param name="O_path" type="str" value="$(find assignment_1)/ontology/map1.owl" />
+  <param name="O_IRI" type="str" value="http://bnc/exp-rob-lab/2022-23" />
 
-    <param name="O_path" type="str" value="/home/samuele/experimental_lab__ws/src/assignment_1/ontology/map1.owl" />
-    <param name="O_IRI" type="str" value="http://bnc/exp-rob-lab/2022-23" />
+  <!-- if you want to save the ontology, please change the O_save_path with the desired path -->
+  <param name="save_ontology" type="bool" value="False" />
+  <param name="O_save_path" type="str" value="/home/samuele/experimental_lab__ws/src/assignment_1/ontology/mapFull.owl" />
 
-    <param name="armor_client_id" type="str" value="user" />
-    <param name="armor_reference_name" type="str" value="ref" />
+  <param name="armor_client_id" type="str" value="user" />
+  <param name="armor_reference_name" type="str" value="ref" />
 
-    <param name="ontology_reasoner" type="str" value="PELLET" />
-    <param name="urgency_threshold" type="int" value="30" />
+  <param name="ontology_reasoner" type="str" value="PELLET" />
+  <param name="urgency_threshold" type="int" value="300" />
 
-    <param name="charging_station_in" type="str" value="E" />
+  <param name="charging_station_in" type="str" value="E" />
 
-    <param name="scanning_time" type="int" value="1" />
-    <rosparam param="planning_time"> [0.1, 0.2] </rosparam>
-    <rosparam param="motion_time"> [0.1, 0.2] </rosparam>
+  <param name="n_ids" type="int" value="7" />
+
+  <rosparam param="planning_time"> [0, 0] </rosparam>
+  <rosparam param="motion_time"> [0, 0] </rosparam>
 
 
-    <param name="monitoring_time" type="int" value="2" />
-    <param name="recharging_time" type="int" value="5" />
+  <param name="monitoring_time" type="int" value="10" />
+  <param name="recharging_time" type="int" value="10" />
 
-    <rosparam param="battery_time"> [20, 30] </rosparam>
+  <rosparam param="battery_time"> [10000, 10000] </rosparam>
 
-    <!-- rosrun armor execute it.emarolab.armor.ARMORMainService -->
     <node pkg="armor"
           type="execute"
           name="armor_service"
           args="it.emarolab.armor.ARMORMainService"
+          output="screen"
           />
 
     <node pkg = "assignment_1"
           type = "ontology_interface.py"
           name = "ontology_interface"
-
           />
 
     <node pkg = "assignment_1"
           type = "scanner.py"
           name = "scanner"
-          output="screen"
-          launch-prefix="gnome-terminal --command"
            />
 
     <node pkg = "assignment_1"
@@ -66,11 +66,11 @@
           name = "robot_state"
           />
 
-    <node pkg = "smach_viewer"
+    <!--node pkg = "smach_viewer"
           type = "smach_viewer.py"
           name = "smach_viewer"
           output = "screen"
-    />
+    /-->
 
 
 </launch>

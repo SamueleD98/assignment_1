@@ -88,6 +88,7 @@ find_package(catkin REQUIRED COMPONENTS
    DEPENDENCIES
    std_msgs
    actionlib_msgs
+   nav_msgs
  )
 
 ################################################
