@@ -5,11 +5,26 @@ Author: *Samuele Depalo*
 [Code documentation](https://samueled98.github.io/assignment_1/)
 
 ---
+<<<<<<< HEAD
 > :memo: **Assignment 2:**
 >
 > In this second assignment of the Experimental Robotics Laboratory course, the architecture developed in the first assignment is integrated with a robotic simulation.
 >
 > The following ReadMe and the documentation have been integrated with all the difference from the original system
+=======
+> :memo: **Assignment 2:** 
+> 
+> In this second assignment of the Experimental Robotics Laboratory course, the architecture developed in the first assignment is integrated with a robotic simulation. 
+> 
+> The following ReadMe and the documentation have been integrated with all the difference from the original system.
+> Here some new features:
+> - The spawned robot is able to recognize some Aruco markers and move autonomously while mapping the environment
+> - The popolated ontology can be saved (according to a parameter)
+> - The location to reach is now chosen according to the last visited time or according to the number of urgent locations the robot can reach from there (if it is a corridor)
+> - The planner and controller nodes now actually implement a planner and a controller by relying on the move_base package
+
+rosrun map_server map_saver
+>>>>>>> 8f4dbe79e916fcc7a1d1b99db6de2bf281fa965e
 
 ## Introduction
 
@@ -213,7 +228,7 @@ For the navigation, the move_base package is used with 'nafvn' as the global pla
 
 ## The robot
 The developed robot is a mobile robot with a 3-dof arm embedded with a camera:
-![robot](https://user-images.githubusercontent.com/28822110/214936786-10bcc383-1363-439c-ad9f-8712aa319e7c.png)  
+![robot](https://user-images.githubusercontent.com/28822110/215561218-3b7105c5-8783-452b-848b-bfd737d5f820.png)
 The robot has two actuated wheels (+1 castor wheel), a laser sensor (used for navigation) and a camera (used for environment scansion). The arm was necessary to read the markers on the wall since the camera was not able to recognize them.  
 The robot and its components are described in 'robot2.xacro' and 'robot2.gazebo'.  
 It is embedded with three revolute joints, one of which continuous (the one between the base and the arm). Their motors are controlled from the scanner node through the 'joint_position_controller/command' topics. The position controllers are spawned in the assignment.launch and configured in 'config/motors_config.yaml'.
