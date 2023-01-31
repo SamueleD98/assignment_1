@@ -5,12 +5,7 @@ Author: *Samuele Depalo*
 [Code documentation](https://samueled98.github.io/assignment_1/)
 
 ---
-> :memo: **Assignment 2:**
->
-> In this second assignment of the Experimental Robotics Laboratory course, the architecture developed in the first assignment is integrated with a robotic simulation.
->
-> The following ReadMe and the documentation have been integrated with all the difference from the original system
-=======
+
 > :memo: **Assignment 2:** 
 > 
 > In this second assignment of the Experimental Robotics Laboratory course, the architecture developed in the first assignment is integrated with a robotic simulation. 
