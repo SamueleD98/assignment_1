@@ -9,7 +9,7 @@ ROS node for implementing a planner.
 
 Being this a simpler version, for the documentation please refer to the `original code <https://github.com/buoncubi/arch_skeleton>`_
 
-NOTE: this is not used in latest version of the system (move_base used instead).
+It calls the service 'make_plan' offered by move_base.
 
 """
 
@@ -44,9 +44,6 @@ class PlannerAction(object):
         start_position = self._get_pose_client()
         target_position = goal.target
 
-        # print(start_position)
-        # print(target_position)
-
         if start_position is None or target_position is None:
             rospy.logerr('Cannot have `None` start point nor target point. This service will be aborted!')
             self._as.set_aborted()
@@ -71,7 +68,6 @@ class PlannerAction(object):
             rospy.loginfo('...')
             move_base_getPlan = rospy.ServiceProxy('/move_base/make_plan', GetPlan)
             plan = move_base_getPlan(start=start_pose, goal=target_pose, tolerance=1.0)
-            #return resp1.sum
         except rospy.ServiceException as e:
             rospy.logerr("Unable to build plan")
             self._as.set_aborted()

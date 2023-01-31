@@ -12,7 +12,6 @@ Action server:
 
 - OntologyInterface
 
-
 """
 
 import rospy
@@ -55,8 +54,6 @@ class OntologyInterface(object):
                                       auto_start=False)
 
         self.locations_info = rospy.ServiceProxy('room_info', RoomInformation)
-
-        #self.map_loaded = False
 
         # params setup
         self.ontology_path = rospy.get_param("O_path", "$(find assignment_1)/ontology/map1.owl")
@@ -114,8 +111,6 @@ class OntologyInterface(object):
             #error
             self._as.set_aborted()
         return
-
-
 
     def load_map(self, ids):
         """
