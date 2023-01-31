@@ -232,13 +232,11 @@ Services:
 ## The robot
 The developed robot is a mobile robot with a 3-dof arm embedded with a camera:
 ![robot](https://user-images.githubusercontent.com/28822110/215561218-3b7105c5-8783-452b-848b-bfd737d5f820.png)
-The robot has two actuated wheels (+1 castor wheel), a laser sensor (used for navigation) and a camera (used for environment scansion). The arm was necessary to read the markers on the wall since the camera was not able to recognize them.  
-The robot and its components are described in 'robot2.xacro' and 'robot2.gazebo'.  
-It is embedded with three revolute joints, one of which continuous (the one between the base and the arm). Their motors are controlled from the scanner node through the 'joint_position_controller/command' topics. The position controllers are spawned in the assignment.launch and configured in 'config/motors_config.yaml'.
-
-### Mapping and Navigation
-The robot makes use of the gmapping package to map the environment (using the hokuyo laser).  
-For the navigation, the move_base package is used with 'nafvn' as the global planner and 'base_local_planner' as the local planner. All the parameters are in the params/ folder.
+The mobile base is just like the one of the ![rosbots](https://github.com/husarion/rosbot_description).  
+The robot makes use of the ![gmapping](http://wiki.ros.org/gmapping) package to map the environment while moving (using a hokuyo laser). 
+For the navigation, the ![move_base](http://wiki.ros.org/move_base) package is used with 'nafvn' as the global planner and 'base_local_planner' as the local planner. All the parameters are in the params/ folder.
+The arm was necessary to read the markers on the wall since a fixed camera was not able to recognize them. It is made up of three links (including the camera one) and three revolute joints (shoulder, elbow and one for changing the camera inclination with respect to ground).
+The robot and its components are described in the '.xacro' and '.gazebo' files in the /urdf folder. Their motors are controlled from the scanner node through the 'joint_position_controller/command' topics. The position controllers are spawned in the assignment.launch and configured in 'config/motors_config.yaml'.
 
 ## Launching the Software
 
@@ -261,9 +259,9 @@ For running the software call:
 This will set the parameters in the server, run the aRMOR server, the state machine and all the other necessary components later described.  
 The showed outputs are the state machine node's and the smach viewer's ones. It also opens gazebo and rviz.
 
-For further information you can call the `roslaunch assignment_1 debug.launch` which shows to screen all the components' output (instead of system.launch).
+For further information you can call the `roslaunch assignment_1 debug.launch` which shows to screen all the components' output (instead of system.launch).  
 
-rosrun map_server map_saver
+Also, if you need to save the map shown in rviz just run `rosrun map_server map_saver` anytime you want.
 
 ### ROS Parameters  
 This software requires the following ROS parameters:
@@ -275,9 +273,10 @@ This software requires the following ROS parameters:
 - `urgency_threshold`, time after last visit which makes the location urgent, default 7
 - `charging_station_in`, recharging room, default "E"
 - `n_ids`, number of markers the robot has to scan
-- `motion_time`, time for reaching a via point, default between 0.1 and 0.2
 - `recharging_time`, busy waiting duration, default 10
 - `battery_time`, battery status toggle time, default between 15 and 40
+- `save_ontology`, if it has to save the popolated ontology, default false
+- `O_save_path`, where it should save the popolated ontology, default "/home//mapFull.owl"
 
 
 ## Code execution  
