@@ -232,9 +232,9 @@ Services:
 ## The robot
 The developed robot is a mobile robot with a 3-dof arm embedded with a camera:
 ![robot](https://user-images.githubusercontent.com/28822110/215561218-3b7105c5-8783-452b-848b-bfd737d5f820.png)
-The mobile base is just like the one of the ![rosbots](https://github.com/husarion/rosbot_description).  
-The robot makes use of the ![gmapping](http://wiki.ros.org/gmapping) package to map the environment while moving (using a hokuyo laser). 
-For the navigation, the ![move_base](http://wiki.ros.org/move_base) package is used with 'nafvn' as the global planner and 'base_local_planner' as the local planner. All the parameters are in the params/ folder.  
+The mobile base is just like the one of the [rosbots](https://github.com/husarion/rosbot_description).  
+The robot makes use of the [gmapping](http://wiki.ros.org/gmapping) package to map the environment while moving (using a hokuyo laser). 
+For the navigation, the [move_base](http://wiki.ros.org/move_base) package is used with 'nafvn' as the global planner and 'base_local_planner' as the local planner. All the parameters are in the params/ folder.  
 
 The arm was necessary to read the markers on the wall since a fixed camera was not able to recognize them. It is made up of three links (including the camera one) and three revolute joints (shoulder, elbow and one for changing the camera inclination with respect to ground).  
 
