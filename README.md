@@ -234,8 +234,10 @@ The developed robot is a mobile robot with a 3-dof arm embedded with a camera:
 ![robot](https://user-images.githubusercontent.com/28822110/215561218-3b7105c5-8783-452b-848b-bfd737d5f820.png)
 The mobile base is just like the one of the ![rosbots](https://github.com/husarion/rosbot_description).  
 The robot makes use of the ![gmapping](http://wiki.ros.org/gmapping) package to map the environment while moving (using a hokuyo laser). 
-For the navigation, the ![move_base](http://wiki.ros.org/move_base) package is used with 'nafvn' as the global planner and 'base_local_planner' as the local planner. All the parameters are in the params/ folder.
-The arm was necessary to read the markers on the wall since a fixed camera was not able to recognize them. It is made up of three links (including the camera one) and three revolute joints (shoulder, elbow and one for changing the camera inclination with respect to ground).
+For the navigation, the ![move_base](http://wiki.ros.org/move_base) package is used with 'nafvn' as the global planner and 'base_local_planner' as the local planner. All the parameters are in the params/ folder.  
+
+The arm was necessary to read the markers on the wall since a fixed camera was not able to recognize them. It is made up of three links (including the camera one) and three revolute joints (shoulder, elbow and one for changing the camera inclination with respect to ground).  
+
 The robot and its components are described in the '.xacro' and '.gazebo' files in the /urdf folder. Their motors are controlled from the scanner node through the 'joint_position_controller/command' topics. The position controllers are spawned in the assignment.launch and configured in 'config/motors_config.yaml'.
 
 ## Launching the Software
@@ -314,6 +316,7 @@ Now, the robot, which has completed a full recharge, continues monitoring the lo
 - The simulated battery is pretty far from a realistic one. It should decrease accordingly to the motion made.
 ### Possible technical improvements
 - For now, actions do not return any feedback during their execution. It can be useful to implement them.
+- The camera arm is just being used to scan the markers. Using the [MoveIt](https://moveit.ros.org/) would allow to better control the arm and so exploit it for monitoring more complex scenarios (with obstacle such as tables, chairs and other furnitures).
 
 ## Contact me
 Samuele Depalo  
