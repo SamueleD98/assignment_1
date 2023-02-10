@@ -9,7 +9,7 @@ ROS node for implementing a controller.
 
 Being a simpler version, for the documentation please refer to `the original code <https://github.com/buoncubi/arch_skeleton>`_
 
-NOTE: this is not used in latest version of the system (move_base used instead).
+It calls the move_base package to make a plan and control the motion to a given target.
 
 """
 
@@ -26,8 +26,13 @@ from assignment_1.msg import ControlResult, Point
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 
 class ControllerAction(object):
+    """
+    Class implementing the controller
+    """
     def __init__(self):
-        self.motion_time = rospy.get_param("motion_time", [0.1, 0.2])
+        """
+        Initialize the control server and the move_base client
+        """
 
         self._as = SimpleActionServer('action_controller',
                                       assignment_1.msg.ControlAction,
@@ -42,6 +47,12 @@ class ControllerAction(object):
         rospy.loginfo('controller ok')
 
     def execute_callback(self, goal):
+        """
+        Called every time a goal comes:
+        - Checks if there's a target into the goal std_msg
+        - Send the goal to the move_base package
+        - Waits while checking for preemption
+        """
         print(' ')
         rospy.loginfo('Trying to reach the target')
 
@@ -77,6 +88,10 @@ class ControllerAction(object):
         return
 
     def update_pose(self, feedback):
+        """
+        Move_base feedback callback.
+        Set the new pose in the robot_state node
+        """
         pose = Point(x=feedback.base_position.pose.position.x,
                         y=feedback.base_position.pose.position.y)
         rospy.wait_for_service('/set_pose')
