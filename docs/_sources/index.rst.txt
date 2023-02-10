@@ -3,13 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-ExpRobLab first assignment's documentation
+ExpRobLab assignment's documentation
 ======================================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
 
 
 Indices
@@ -34,6 +33,11 @@ Scanner Module
 .. automodule:: scripts.scanner
   :members:
 
+Robot-State Module
+==========================
+.. automodule:: scripts.robot_state
+  :members:
+
 Planner Module
 ==========================
 .. automodule:: scripts.planner
@@ -42,9 +46,4 @@ Planner Module
 Controller Module
 ==========================
 .. automodule:: scripts.controller
-  :members:
-
-Robot-State Module
-==========================
-.. automodule:: scripts.robot_state
   :members:
