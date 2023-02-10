@@ -1,9 +1,9 @@
 #include <ros/ros.h>
-#include <assignment2/RoomConnection.h>
-#include <assignment2/RoomInformation.h>
+#include <assignment_1/RoomConnection.h>
+#include <assignment_1/RoomInformation.h>
 
-bool markerCallback(assignment2::RoomInformation::Request &req, assignment2::RoomInformation::Response &res){
-	assignment2::RoomConnection conn;
+bool markerCallback(assignment_1::RoomInformation::Request &req, assignment_1::RoomInformation::Response &res){
+	assignment_1::RoomConnection conn;
 	switch (req.id){
 	case 11:
 		res.room = "E";

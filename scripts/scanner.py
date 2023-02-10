@@ -78,19 +78,20 @@ class ScannerAction(object):
         """
         rospy.loginfo('Scanning..')
         self.set_joint1.publish(0)
-        rospy.sleep(0.2)
+        rospy.sleep(0.5)
 
         self.set_joint1.publish(1.57)
-        rospy.sleep(0.2)
+        rospy.sleep(0.5)
 
         self.set_joint1.publish(3.14)
-        rospy.sleep(0.2)
+        rospy.sleep(0.5)
 
         self.set_joint1.publish(4.71)
-        rospy.sleep(0.2)
+        rospy.sleep(0.5)
 
         self.set_joint1.publish(6.28)
-        rospy.sleep(0.2)
+        rospy.sleep(0.5)
+        
         rospy.loginfo('Done!')
         return 'done'
 
@@ -102,7 +103,7 @@ class ScannerAction(object):
         rospy.loginfo('Looking for markers, below the list while updating:')
         #SCAN AND RETRIEVED THE IDs THEN PASS THEM TO ONTOLOGY
         self.ids = []
-        self.ids = [11, 12, 13, 14, 15, 16, 17]
+        #self.ids = [11, 12, 13, 14, 15, 16, 17]
 
         while(len(self.ids) != self.n_ids):
             rotation_1 = -3
